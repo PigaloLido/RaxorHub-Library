@@ -1105,11 +1105,11 @@ function RaxorHub:Window(GuiConfig)
     ContentContainer.ZIndex = 25
     ContentContainer.Parent = MainFrame
 
-    -- [[ Presets Modal Popup (Matches Blade Image 7) ]]
+    -- [[ Presets Modal Popup (Complete Configuration Hub) ]]
     PresetsModal = Instance.new("Frame")
     PresetsModal.Name = "PresetsModal"
-    PresetsModal.Size = UDim2.new(0, 255, 0, 310)
-    PresetsModal.Position = UDim2.new(1, -265, 0, 52)
+    PresetsModal.Size = UDim2.new(0, 270, 0, 340)
+    PresetsModal.Position = UDim2.new(1, -280, 0, 52)
     PresetsModal.BackgroundColor3 = Colors.ModalBg
     PresetsModal.BorderSizePixel = 0
     PresetsModal.Visible = false
@@ -1139,26 +1139,28 @@ function RaxorHub:Window(GuiConfig)
     PresetsTitle.TextSize = 13
     PresetsTitle.TextColor3 = Colors.Text
     PresetsTitle.Position = UDim2.new(0, 32, 0.5, -8)
-    PresetsTitle.Size = UDim2.new(0, 70, 0, 16)
+    PresetsTitle.Size = UDim2.new(0, 80, 0, 16)
     PresetsTitle.TextXAlignment = Enum.TextXAlignment.Left
     PresetsTitle.BackgroundTransparency = 1
     PresetsTitle.ZIndex = 6002
     PresetsTitle.Parent = PresetsHeader
 
-    local PresetsAutoBadge = Instance.new("TextLabel")
-    PresetsAutoBadge.Text = "Auto: None"
-    PresetsAutoBadge.Font = Fonts.Medium
-    PresetsAutoBadge.TextSize = 10
-    PresetsAutoBadge.TextColor3 = Colors.MutedText
-    PresetsAutoBadge.Position = UDim2.new(1, -145, 0.5, -8)
-    PresetsAutoBadge.Size = UDim2.new(0, 135, 0, 16)
-    PresetsAutoBadge.TextXAlignment = Enum.TextXAlignment.Right
-    PresetsAutoBadge.TextTruncate = Enum.TextTruncate.AtEnd
-    PresetsAutoBadge.BackgroundTransparency = 1
-    PresetsAutoBadge.ZIndex = 6002
-    PresetsAutoBadge.Parent = PresetsHeader
+    local PresetsCloseBtn = Instance.new("ImageButton")
+    PresetsCloseBtn.Size = UDim2.new(0, 16, 0, 16)
+    PresetsCloseBtn.Position = UDim2.new(1, -24, 0.5, -8)
+    PresetsCloseBtn.BackgroundTransparency = 1
+    PresetsCloseBtn.Image = Icons.Close
+    PresetsCloseBtn.ImageColor3 = Colors.SubText
+    PresetsCloseBtn.ZIndex = 6002
+    PresetsCloseBtn.Parent = PresetsHeader
 
-    -- New Config Input & Add Button (Save Icon 8)
+    PresetsCloseBtn.MouseEnter:Connect(function() PresetsCloseBtn.ImageColor3 = Colors.CloseRed end)
+    PresetsCloseBtn.MouseLeave:Connect(function() PresetsCloseBtn.ImageColor3 = Colors.SubText end)
+    PresetsCloseBtn.MouseButton1Click:Connect(function()
+        PresetsModal.Visible = false
+    end)
+
+    -- New Config Input & Save Button
     local ConfigInputFrame = Instance.new("Frame")
     ConfigInputFrame.Size = UDim2.new(1, -16, 0, 28)
     ConfigInputFrame.Position = UDim2.new(0, 8, 0, 38)
@@ -1193,9 +1195,10 @@ function RaxorHub:Window(GuiConfig)
     AddConfigBtn.Parent = ConfigInputFrame
     Instance.new("UICorner", AddConfigBtn).CornerRadius = UDim.new(0, 4)
 
+    -- Configs Scrolling List
     local PresetsScroll = Instance.new("ScrollingFrame")
-    PresetsScroll.Size = UDim2.new(1, -16, 1, -76)
-    PresetsScroll.Position = UDim2.new(0, 8, 0, 70)
+    PresetsScroll.Size = UDim2.new(1, -16, 1, -116)
+    PresetsScroll.Position = UDim2.new(0, 8, 0, 72)
     PresetsScroll.BackgroundTransparency = 1
     PresetsScroll.BorderSizePixel = 0
     PresetsScroll.ScrollBarThickness = 2
@@ -1208,6 +1211,56 @@ function RaxorHub:Window(GuiConfig)
     PresetsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     PresetsLayout.Parent = PresetsScroll
 
+    -- Footer: Autoload Status & Reset Button
+    local FooterFrame = Instance.new("Frame")
+    FooterFrame.Size = UDim2.new(1, -16, 0, 32)
+    FooterFrame.Position = UDim2.new(0, 8, 1, -36)
+    FooterFrame.BackgroundTransparency = 1
+    FooterFrame.ZIndex = 6002
+    FooterFrame.Parent = PresetsModal
+
+    local FooterDivider = Instance.new("Frame")
+    FooterDivider.Size = UDim2.new(1, 0, 0, 1)
+    FooterDivider.Position = UDim2.new(0, 0, 0, 0)
+    FooterDivider.BackgroundColor3 = Colors.Border
+    FooterDivider.BorderSizePixel = 0
+    FooterDivider.ZIndex = 6003
+    FooterDivider.Parent = FooterFrame
+
+    local FooterStarIcon = Instance.new("ImageLabel")
+    FooterStarIcon.Size = UDim2.new(0, 13, 0, 13)
+    FooterStarIcon.Position = UDim2.new(0, 2, 0.5, -6)
+    FooterStarIcon.Image = Icons.Star
+    FooterStarIcon.ImageColor3 = Colors.Accent
+    FooterStarIcon.BackgroundTransparency = 1
+    FooterStarIcon.ZIndex = 6003
+    FooterStarIcon.Parent = FooterFrame
+
+    local FooterAutoLabel = Instance.new("TextLabel")
+    FooterAutoLabel.Size = UDim2.new(1, -72, 1, -1)
+    FooterAutoLabel.Position = UDim2.new(0, 20, 0, 1)
+    FooterAutoLabel.BackgroundTransparency = 1
+    FooterAutoLabel.Font = Fonts.Medium
+    FooterAutoLabel.TextSize = 11
+    FooterAutoLabel.TextColor3 = Colors.SubText
+    FooterAutoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    FooterAutoLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    FooterAutoLabel.ZIndex = 6003
+    FooterAutoLabel.Parent = FooterFrame
+
+    local FooterResetBtn = Instance.new("TextButton")
+    FooterResetBtn.Size = UDim2.new(0, 48, 0, 20)
+    FooterResetBtn.Position = UDim2.new(1, -48, 0.5, -9)
+    FooterResetBtn.BackgroundColor3 = Colors.ButtonBg
+    FooterResetBtn.Text = "Reset"
+    FooterResetBtn.Font = Fonts.Medium
+    FooterResetBtn.TextSize = 10
+    FooterResetBtn.TextColor3 = Colors.SubText
+    FooterResetBtn.ZIndex = 6003
+    FooterResetBtn.Parent = FooterFrame
+    Instance.new("UICorner", FooterResetBtn).CornerRadius = UDim.new(0, 4)
+    AddStroke(FooterResetBtn, Colors.Border, 1)
+
     local function RefreshPresetsList()
         for _, c in pairs(PresetsScroll:GetChildren()) do
             if c:IsA("Frame") then c:Destroy() end
@@ -1215,11 +1268,15 @@ function RaxorHub:Window(GuiConfig)
 
         local currentAutoload = RaxorHub:GetAutoload()
         if currentAutoload and currentAutoload ~= "" then
-            PresetsAutoBadge.Text = "Auto: " .. currentAutoload
-            PresetsAutoBadge.TextColor3 = Colors.Accent
+            FooterAutoLabel.Text = "Auto: " .. currentAutoload
+            FooterAutoLabel.TextColor3 = Colors.Accent
+            FooterStarIcon.ImageColor3 = Colors.Accent
+            FooterResetBtn.Visible = true
         else
-            PresetsAutoBadge.Text = "Auto: None"
-            PresetsAutoBadge.TextColor3 = Colors.MutedText
+            FooterAutoLabel.Text = "Auto: None"
+            FooterAutoLabel.TextColor3 = Colors.MutedText
+            FooterStarIcon.ImageColor3 = Colors.MutedText
+            FooterResetBtn.Visible = false
         end
 
         local configs = RaxorHub:GetConfigList()
@@ -1227,7 +1284,7 @@ function RaxorHub:Window(GuiConfig)
 
         if #configs == 0 then
             local emptyLabel = Instance.new("TextLabel")
-            emptyLabel.Size = UDim2.new(1, 0, 0, 40)
+            emptyLabel.Size = UDim2.new(1, 0, 0, 50)
             emptyLabel.Text = "No saved configs"
             emptyLabel.Font = Fonts.Regular
             emptyLabel.TextSize = 12
@@ -1241,7 +1298,7 @@ function RaxorHub:Window(GuiConfig)
         for _, cfgName in ipairs(configs) do
             local isAuto = (currentAutoload == cfgName)
             local itemRow = Instance.new("Frame")
-            itemRow.Size = UDim2.new(1, -4, 0, 30)
+            itemRow.Size = UDim2.new(1, -4, 0, 32)
             itemRow.BackgroundColor3 = isAuto and Colors.CardHover or Colors.CardBg
             itemRow.ZIndex = 6003
             itemRow.Parent = PresetsScroll
@@ -1254,17 +1311,17 @@ function RaxorHub:Window(GuiConfig)
             itemLabel.TextSize = 11
             itemLabel.TextColor3 = isAuto and Colors.Accent or Colors.Text
             itemLabel.Position = UDim2.new(0, 8, 0, 0)
-            itemLabel.Size = UDim2.new(1, -106, 1, 0)
+            itemLabel.Size = UDim2.new(1, -118, 1, 0)
             itemLabel.TextXAlignment = Enum.TextXAlignment.Left
             itemLabel.TextTruncate = Enum.TextTruncate.AtEnd
             itemLabel.BackgroundTransparency = 1
             itemLabel.ZIndex = 6004
             itemLabel.Parent = itemRow
 
-            -- Load button
+            -- 1. Load Button
             local loadBtn = Instance.new("TextButton")
-            loadBtn.Size = UDim2.new(0, 36, 0, 20)
-            loadBtn.Position = UDim2.new(1, -98, 0.5, -10)
+            loadBtn.Size = UDim2.new(0, 38, 0, 20)
+            loadBtn.Position = UDim2.new(1, -108, 0.5, -10)
             loadBtn.BackgroundColor3 = Colors.Accent
             loadBtn.Text = "Load"
             loadBtn.Font = Fonts.Title
@@ -1278,10 +1335,10 @@ function RaxorHub:Window(GuiConfig)
                 RaxorHub:LoadConfigData(cfgName)
             end)
 
-            -- Overwrite button (Floppy disk icon)
+            -- 2. Overwrite Button (Floppy disk icon)
             local overwriteBtn = Instance.new("ImageButton")
             overwriteBtn.Size = UDim2.new(0, 18, 0, 18)
-            overwriteBtn.Position = UDim2.new(1, -58, 0.5, -9)
+            overwriteBtn.Position = UDim2.new(1, -66, 0.5, -9)
             overwriteBtn.BackgroundTransparency = 1
             overwriteBtn.Image = Icons.Save
             overwriteBtn.ImageColor3 = Colors.SubText
@@ -1292,12 +1349,17 @@ function RaxorHub:Window(GuiConfig)
             overwriteBtn.MouseLeave:Connect(function() overwriteBtn.ImageColor3 = Colors.SubText end)
             overwriteBtn.MouseButton1Click:Connect(function()
                 RaxorHub:SaveCurrentConfig(cfgName)
+                RaxorHub:Notify({
+                    Title = "Preset Overwritten",
+                    Content = "เขียนทับการตั้งค่าลง '" .. cfgName .. "' เรียบร้อย",
+                    Duration = 2.5
+                })
             end)
 
-            -- Star / Autoload button
+            -- 3. Autoload Toggle Button (Star icon)
             local autoBtn = Instance.new("ImageButton")
             autoBtn.Size = UDim2.new(0, 18, 0, 18)
-            autoBtn.Position = UDim2.new(1, -38, 0.5, -9)
+            autoBtn.Position = UDim2.new(1, -44, 0.5, -9)
             autoBtn.BackgroundTransparency = 1
             autoBtn.Image = Icons.Star
             autoBtn.ImageColor3 = isAuto and Colors.Accent or Colors.MutedText
@@ -1315,10 +1377,10 @@ function RaxorHub:Window(GuiConfig)
                 RefreshPresetsList()
             end)
 
-            -- Delete button
+            -- 4. Delete Button (Trash icon)
             local delBtn = Instance.new("ImageButton")
             delBtn.Size = UDim2.new(0, 18, 0, 18)
-            delBtn.Position = UDim2.new(1, -18, 0.5, -9)
+            delBtn.Position = UDim2.new(1, -22, 0.5, -9)
             delBtn.BackgroundTransparency = 1
             delBtn.Image = Icons.Trash
             delBtn.ImageColor3 = Colors.SubText
@@ -1335,12 +1397,23 @@ function RaxorHub:Window(GuiConfig)
     end
     RaxorHub.RefreshPresetsList = RefreshPresetsList
 
+    FooterResetBtn.MouseButton1Click:Connect(function()
+        RaxorHub:ResetAutoload()
+        RefreshPresetsList()
+    end)
+
     AddConfigBtn.MouseButton1Click:Connect(function()
         local name = ConfigNameInput.Text
         if name and name ~= "" and name ~= "---" then
             RaxorHub:SaveCurrentConfig(name)
             ConfigNameInput.Text = ""
             RefreshPresetsList()
+        else
+            RaxorHub:Notify({
+                Title = "Error",
+                Content = "กรุณากรอกชื่อ Preset ก่อนกดบันทึก",
+                Duration = 2.5
+            })
         end
     end)
 
@@ -2661,6 +2734,15 @@ function RaxorHub:Window(GuiConfig)
     ContentContainer.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             CloseAllDropdowns()
+        end
+    end)
+
+    -- [[ Automatically Load Autoload Preset on Startup ]]
+    task.spawn(function()
+        task.wait(0.6)
+        local autoPreset = RaxorHub:GetAutoload()
+        if autoPreset and autoPreset ~= "" and autoPreset ~= "None" then
+            RaxorHub:LoadConfigData(autoPreset)
         end
     end)
 
