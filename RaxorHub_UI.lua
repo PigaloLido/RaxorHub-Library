@@ -95,13 +95,13 @@ local Colors = {
     Black           = Color3.fromRGB(0, 0, 0)
 }
 
--- [[ Font Configuration - Valid Roblox Fonts with Full Thai Support ]]
+-- [[ Font Configuration - Original Gotham Fonts with Enhanced Thai Sizes ]]
 local Fonts = {
-    Title       = Enum.Font.GothamBold,      -- Valid bold font for titles
-    Medium      = Enum.Font.GothamMedium,    -- Valid medium font for UI labels
-    Regular     = Enum.Font.SourceSansBold,  -- SourceSansBold renders Thai at 100% full scale and bold!
-    Brand       = Enum.Font.GothamBlack,     -- Stylized brand typography
-    Code        = Enum.Font.Code             -- Monospace for values & keybinds
+    Title       = Enum.Font.GothamBold,
+    Medium      = Enum.Font.GothamMedium,
+    Regular     = Enum.Font.Gotham,
+    Brand       = Enum.Font.GothamBold,
+    Code        = Enum.Font.Code
 }
 
 -- [[ Built-in Custom Asset Icons (Blade & RaxorHub White Line Icons) ]]
@@ -770,8 +770,8 @@ function RaxorHub:Window(GuiConfig)
 
     local ProfileStatus = Instance.new("TextLabel")
     ProfileStatus.Text = GuiConfig.ProfileTag or "Till: Lifetime"
-    ProfileStatus.Font = Fonts.Regular
-    ProfileStatus.TextSize = 11
+    ProfileStatus.Font = Fonts.Medium
+    ProfileStatus.TextSize = 12
     ProfileStatus.TextColor3 = Colors.SubText
     ProfileStatus.Size = UDim2.new(1, -48, 0, 14)
     ProfileStatus.Position = UDim2.new(0, 46, 0, 26)
@@ -1326,11 +1326,11 @@ function RaxorHub:Window(GuiConfig)
 
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
-                Desc.Size = UDim2.new(1, -45, 0, 16)
+                Desc.Size = UDim2.new(1, -45, 0, 18)
                 Desc.Position = UDim2.new(0, xPos, 0, 20)
                 Desc.Text = Description
-                Desc.Font = Fonts.Regular
-                Desc.TextSize = 11
+                Desc.Font = Fonts.Medium
+                Desc.TextSize = 12
                 Desc.TextColor3 = Colors.SubText
                 Desc.TextXAlignment = Enum.TextXAlignment.Left
                 Desc.BackgroundTransparency = 1
@@ -1364,8 +1364,8 @@ function RaxorHub:Window(GuiConfig)
                     TDesc.Text = desc
                     TDesc.Size = UDim2.new(1, -rightSpace, 0, 20)
                     TDesc.Position = UDim2.new(0, 14, 0, 28)
-                    TDesc.Font = Fonts.Regular
-                    TDesc.TextSize = 12
+                    TDesc.Font = Fonts.Medium
+                    TDesc.TextSize = 13
                     TDesc.TextColor3 = Colors.SubText
                     TDesc.TextXAlignment = Enum.TextXAlignment.Left
                     TDesc.BackgroundTransparency = 1
