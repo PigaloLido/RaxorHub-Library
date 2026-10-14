@@ -32,8 +32,78 @@ end
 
 local ConfigFolder = "RaxorHub_Configs"
 if isfolder and makefolder and not isfolder(ConfigFolder) then
-    makefolder(ConfigFolder)
+    pcall(function() makefolder(ConfigFolder) end)
 end
+
+-- Fallback memory storage for environments without file API or Roblox Studio
+local MemoryFiles = {}
+local function SafeWriteFile(path, content)
+    if writefile then
+        pcall(function() writefile(path, content) end)
+    end
+    MemoryFiles[path] = content
+end
+
+local function SafeReadFile(path)
+    if isfile and readfile then
+        local ok, res = pcall(function()
+            if isfile(path) then
+                return readfile(path)
+            end
+        end)
+        if ok and res then return res end
+    end
+    return MemoryFiles[path]
+end
+
+local function SafeIsFile(path)
+    if isfile then
+        local ok, res = pcall(function() return isfile(path) end)
+        if ok and res then return true end
+    end
+    return MemoryFiles[path] ~= nil
+end
+
+local function SafeDelFile(path)
+    if isfile and delfile then
+        pcall(function()
+            if isfile(path) then delfile(path) end
+        end)
+    end
+    MemoryFiles[path] = nil
+end
+
+local function SafeListFiles(folder)
+    local list = {}
+    if isfolder and listfiles then
+        pcall(function()
+            if isfolder(folder) then
+                local res = listfiles(folder)
+                if type(res) == "table" then
+                    for _, f in ipairs(res) do
+                        table.insert(list, f)
+                    end
+                end
+            end
+        end)
+    end
+    for path, _ in pairs(MemoryFiles) do
+        if path:sub(1, #folder) == folder then
+            local already = false
+            for _, existing in ipairs(list) do
+                if existing:gsub("\\", "/") == path:gsub("\\", "/") then
+                    already = true
+                    break
+                end
+            end
+            if not already then
+                table.insert(list, path)
+            end
+        end
+    end
+    return list
+end
+
 
 local RaxorHub = {
     Elements = {},
@@ -127,7 +197,9 @@ local Icons = {
     ChevronDown = "rbxassetid://6034818372",      -- Chevron
     Checkmark   = "rbxassetid://6031094667",      -- Checkmark
     Trash       = "rbxassetid://6031079143",      -- Trash
-    Plus        = "rbxassetid://6031094678"       -- Plus
+    Plus        = "rbxassetid://6031094678",      -- Plus
+    Star        = "rbxassetid://6031068426",      -- Star / Autoload
+    Refresh     = "rbxassetid://6031097225"       -- Refresh / Sync
 }
 RaxorHub.Icons = Icons
 
@@ -300,16 +372,44 @@ local function MakeDraggableStartBtn(obj, dragPart, clickCallback)
     end)
 end
 
+-- [[ Serialization for Custom Data Types (Color3, EnumItem, etc.) ]]
+local function SerializeData(data)
+    local serialized = {}
+    for k, v in pairs(data) do
+        if typeof(v) == "Color3" then
+            serialized[k] = {__type = "Color3", r = v.R, g = v.G, b = v.B}
+        elseif typeof(v) == "EnumItem" then
+            serialized[k] = {__type = "EnumItem", enum = tostring(v.EnumType), name = v.Name}
+        else
+            serialized[k] = v
+        end
+    end
+    return serialized
+end
+
+local function DeserializeData(data)
+    local deserialized = {}
+    for k, v in pairs(data) do
+        if type(v) == "table" and v.__type == "Color3" then
+            deserialized[k] = Color3.new(v.r, v.g, v.b)
+        elseif type(v) == "table" and v.__type == "EnumItem" and Enum[v.enum] and Enum[v.enum][v.name] then
+            deserialized[k] = Enum[v.enum][v.name]
+        else
+            deserialized[k] = v
+        end
+    end
+    return deserialized
+end
+
 -- [[ Config System ]]
 function RaxorHub:GetConfigList()
-    if not listfiles or not isfolder or not isfolder(ConfigFolder) then return {} end
-    local files = listfiles(ConfigFolder)
+    local files = SafeListFiles(ConfigFolder)
     local names = {}
     for _, file in ipairs(files) do
         if file:sub(-5) == ".json" then
             local cleanPath = file:gsub("\\", "/")
             local nameWithExtension = cleanPath:gsub(ConfigFolder .. "/", "")
-            local finalName = nameWithExtension:gsub(".json", "")
+            local finalName = nameWithExtension:gsub("%.json$", "")
             table.insert(names, finalName)
         end
     end
@@ -317,14 +417,36 @@ function RaxorHub:GetConfigList()
 end
 
 function RaxorHub:SaveCurrentConfig(name)
-    if not name or name == "" or not writefile then return end
-    local json = HttpService:JSONEncode(RaxorHub.ConfigData)
-    writefile(ConfigFolder .. "/" .. name .. ".json", json)
+    if not name or name == "" or name == "---" then return end
+    local cleanName = name:gsub("%.json$", "")
+    local serialized = SerializeData(RaxorHub.ConfigData)
+    local ok, json = pcall(function() return HttpService:JSONEncode(serialized) end)
+    if not ok or not json then return end
+
+    SafeWriteFile(ConfigFolder .. "/" .. cleanName .. ".json", json)
     RaxorHub:Notify({
         Title = "Preset Saved",
-        Content = "Config '" .. name .. "' has been saved.",
+        Content = "Config '" .. cleanName .. "' has been saved.",
         Duration = 3
     })
+    if RaxorHub.OnConfigListChanged then
+        pcall(function() RaxorHub.OnConfigListChanged() end)
+    end
+    if RaxorHub.RefreshPresetsList then
+        pcall(function() RaxorHub.RefreshPresetsList() end)
+    end
+end
+
+function RaxorHub:OverwriteConfig(name)
+    if not name or name == "" or name == "---" then
+        RaxorHub:Notify({
+            Title = "Overwrite Failed",
+            Content = "Please select a valid config file.",
+            Duration = 2.5
+        })
+        return
+    end
+    RaxorHub:SaveCurrentConfig(name)
 end
 
 local function ApplySettings(data)
@@ -332,7 +454,7 @@ local function ApplySettings(data)
         local obj = RaxorHub.Objects[id]
         if obj then
             if obj.Update then obj.Update(value) end
-            if obj.Callback then
+            if obj.Type ~= "Keybind" and obj.Callback then
                 task.spawn(function()
                     pcall(function() obj.Callback(value) end)
                 end)
@@ -342,35 +464,51 @@ local function ApplySettings(data)
 end
 
 function RaxorHub:LoadConfigData(name)
-    if not isfile or not readfile then return nil end
-    local fileName = ConfigFolder .. "/" .. name .. ".json"
-    if isfile(fileName) then
-        local json = readfile(fileName)
-        local data = HttpService:JSONDecode(json)
-        for id, value in pairs(data) do
-            RaxorHub.ConfigData[id] = value
+    if not name or name == "" or name == "---" then return nil end
+    local cleanName = name:gsub("%.json$", "")
+    local fileName = ConfigFolder .. "/" .. cleanName .. ".json"
+    if SafeIsFile(fileName) then
+        local json = SafeReadFile(fileName)
+        if json and json ~= "" then
+            local ok, rawData = pcall(function() return HttpService:JSONDecode(json) end)
+            if ok and type(rawData) == "table" then
+                local data = DeserializeData(rawData)
+                for id, value in pairs(data) do
+                    RaxorHub.ConfigData[id] = value
+                end
+                ApplySettings(data)
+                RaxorHub:Notify({
+                    Title = "Preset Loaded",
+                    Content = "Config '" .. cleanName .. "' loaded successfully.",
+                    Duration = 3
+                })
+                return data
+            end
         end
-        ApplySettings(data)
-        RaxorHub:Notify({
-            Title = "Preset Loaded",
-            Content = "Config '" .. name .. "' loaded successfully.",
-            Duration = 3
-        })
-        return data
     end
     return nil
 end
 
 function RaxorHub:DeleteConfig(name)
-    if not isfile or not delfile then return end
-    local fileName = ConfigFolder .. "/" .. name .. ".json"
-    if isfile(fileName) then
-        delfile(fileName)
+    if not name or name == "" or name == "---" then return end
+    local cleanName = name:gsub("%.json$", "")
+    local fileName = ConfigFolder .. "/" .. cleanName .. ".json"
+    if SafeIsFile(fileName) then
+        SafeDelFile(fileName)
+        if RaxorHub:GetAutoload() == cleanName then
+            RaxorHub:ResetAutoload()
+        end
         RaxorHub:Notify({
             Title = "Preset Deleted",
-            Content = "Config '" .. name .. "' has been removed.",
+            Content = "Config '" .. cleanName .. "' has been removed.",
             Duration = 3
         })
+        if RaxorHub.OnConfigListChanged then
+            pcall(function() RaxorHub.OnConfigListChanged() end)
+        end
+        if RaxorHub.RefreshPresetsList then
+            pcall(function() RaxorHub.RefreshPresetsList() end)
+        end
     end
 end
 
@@ -421,15 +559,47 @@ end
 
 local AutoloadFile = ConfigFolder .. "/autoload.txt"
 function RaxorHub:SetAutoload(name)
-    if writefile then writefile(AutoloadFile, name) end
+    if not name or name == "" or name == "---" then return end
+    local cleanName = name:gsub("%.json$", "")
+    SafeWriteFile(AutoloadFile, cleanName)
+    RaxorHub:Notify({
+        Title = "Autoload Set",
+        Content = "Set autoload to '" .. cleanName .. "'.",
+        Duration = 3
+    })
+    if RaxorHub.OnAutoloadChanged then
+        pcall(function() RaxorHub.OnAutoloadChanged(cleanName) end)
+    end
+    if RaxorHub.RefreshPresetsList then
+        pcall(function() RaxorHub.RefreshPresetsList() end)
+    end
 end
 
 function RaxorHub:GetAutoload()
-    return (isfile and readfile and isfile(AutoloadFile)) and readfile(AutoloadFile) or nil
+    if SafeIsFile(AutoloadFile) then
+        local content = SafeReadFile(AutoloadFile)
+        if content and content ~= "" and content ~= "None" then
+            return content:gsub("%s+", "")
+        end
+    end
+    return nil
 end
 
 function RaxorHub:ResetAutoload()
-    if isfile and delfile and isfile(AutoloadFile) then delfile(AutoloadFile) end
+    if SafeIsFile(AutoloadFile) then
+        SafeDelFile(AutoloadFile)
+    end
+    RaxorHub:Notify({
+        Title = "Autoload Reset",
+        Content = "Autoload has been reset.",
+        Duration = 3
+    })
+    if RaxorHub.OnAutoloadChanged then
+        pcall(function() RaxorHub.OnAutoloadChanged(nil) end)
+    end
+    if RaxorHub.RefreshPresetsList then
+        pcall(function() RaxorHub.RefreshPresetsList() end)
+    end
 end
 
 function RaxorHub:CheckPlaceId(allowedMaps)
@@ -598,27 +768,38 @@ function RaxorHub:Window(GuiConfig)
     Instance.new("UICorner", StartBtn).CornerRadius = UDim.new(0, 12)
     AddStroke(StartBtn, Colors.BorderActive, 1.5)
 
+    local isToggling = false
+    local savedFrameSize = UDim2.new(0, frameW, 0, frameH)
     local function ToggleUI()
+        if isToggling then return end
+        isToggling = true
         CloseAllDropdowns()
+        if PresetsModal then PresetsModal.Visible = false end
         if MainFrame.Visible then
+            savedFrameSize = MainFrame.Size
             Tween(MainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, MainFrame.AbsoluteSize.X * 0.95, 0, MainFrame.AbsoluteSize.Y * 0.95),
                 BackgroundTransparency = 1
             })
-            task.wait(0.18)
-            MainFrame.Visible = false
-            MainFrame.Size = UDim2.new(0, frameW, 0, frameH)
-            MainFrame.BackgroundTransparency = 0
-            StartBtn.Visible = true
+            task.delay(0.18, function()
+                MainFrame.Visible = false
+                MainFrame.Size = savedFrameSize
+                MainFrame.BackgroundTransparency = 0
+                StartBtn.Visible = true
+                isToggling = false
+            end)
         else
             MainFrame.Visible = true
             StartBtn.Visible = false
-            MainFrame.Size = UDim2.new(0, frameW * 0.95, 0, frameH * 0.95)
+            MainFrame.Size = UDim2.new(0, savedFrameSize.X.Offset * 0.95, 0, savedFrameSize.Y.Offset * 0.95)
             MainFrame.BackgroundTransparency = 0.5
-            Tween(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, frameW, 0, frameH),
+            local t = Tween(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = savedFrameSize,
                 BackgroundTransparency = 0
             })
+            t.Completed:Connect(function()
+                isToggling = false
+            end)
         end
     end
     RaxorHub.ToggleUI = ToggleUI
@@ -927,8 +1108,8 @@ function RaxorHub:Window(GuiConfig)
     -- [[ Presets Modal Popup (Matches Blade Image 7) ]]
     PresetsModal = Instance.new("Frame")
     PresetsModal.Name = "PresetsModal"
-    PresetsModal.Size = UDim2.new(0, 240, 0, 290)
-    PresetsModal.Position = UDim2.new(1, -250, 0, 52)
+    PresetsModal.Size = UDim2.new(0, 255, 0, 310)
+    PresetsModal.Position = UDim2.new(1, -265, 0, 52)
     PresetsModal.BackgroundColor3 = Colors.ModalBg
     PresetsModal.BorderSizePixel = 0
     PresetsModal.Visible = false
@@ -958,11 +1139,24 @@ function RaxorHub:Window(GuiConfig)
     PresetsTitle.TextSize = 13
     PresetsTitle.TextColor3 = Colors.Text
     PresetsTitle.Position = UDim2.new(0, 32, 0.5, -8)
-    PresetsTitle.Size = UDim2.new(0, 100, 0, 16)
+    PresetsTitle.Size = UDim2.new(0, 70, 0, 16)
     PresetsTitle.TextXAlignment = Enum.TextXAlignment.Left
     PresetsTitle.BackgroundTransparency = 1
     PresetsTitle.ZIndex = 6002
     PresetsTitle.Parent = PresetsHeader
+
+    local PresetsAutoBadge = Instance.new("TextLabel")
+    PresetsAutoBadge.Text = "Auto: None"
+    PresetsAutoBadge.Font = Fonts.Medium
+    PresetsAutoBadge.TextSize = 10
+    PresetsAutoBadge.TextColor3 = Colors.MutedText
+    PresetsAutoBadge.Position = UDim2.new(1, -145, 0.5, -8)
+    PresetsAutoBadge.Size = UDim2.new(0, 135, 0, 16)
+    PresetsAutoBadge.TextXAlignment = Enum.TextXAlignment.Right
+    PresetsAutoBadge.TextTruncate = Enum.TextTruncate.AtEnd
+    PresetsAutoBadge.BackgroundTransparency = 1
+    PresetsAutoBadge.ZIndex = 6002
+    PresetsAutoBadge.Parent = PresetsHeader
 
     -- New Config Input & Add Button (Save Icon 8)
     local ConfigInputFrame = Instance.new("Frame")
@@ -978,6 +1172,7 @@ function RaxorHub:Window(GuiConfig)
     ConfigNameInput.Size = UDim2.new(1, -34, 1, 0)
     ConfigNameInput.Position = UDim2.new(0, 8, 0, 0)
     ConfigNameInput.BackgroundTransparency = 1
+    ConfigNameInput.Text = ""
     ConfigNameInput.PlaceholderText = "New config name..."
     ConfigNameInput.PlaceholderColor3 = Colors.MutedText
     ConfigNameInput.TextColor3 = Colors.Text
@@ -1018,8 +1213,17 @@ function RaxorHub:Window(GuiConfig)
             if c:IsA("Frame") then c:Destroy() end
         end
 
+        local currentAutoload = RaxorHub:GetAutoload()
+        if currentAutoload and currentAutoload ~= "" then
+            PresetsAutoBadge.Text = "Auto: " .. currentAutoload
+            PresetsAutoBadge.TextColor3 = Colors.Accent
+        else
+            PresetsAutoBadge.Text = "Auto: None"
+            PresetsAutoBadge.TextColor3 = Colors.MutedText
+        end
+
         local configs = RaxorHub:GetConfigList()
-        PresetsScroll.CanvasSize = UDim2.new(0, 0, 0, #configs * 34)
+        PresetsScroll.CanvasSize = UDim2.new(0, 0, 0, #configs * 36)
 
         if #configs == 0 then
             local emptyLabel = Instance.new("TextLabel")
@@ -1035,30 +1239,32 @@ function RaxorHub:Window(GuiConfig)
         end
 
         for _, cfgName in ipairs(configs) do
+            local isAuto = (currentAutoload == cfgName)
             local itemRow = Instance.new("Frame")
             itemRow.Size = UDim2.new(1, -4, 0, 30)
-            itemRow.BackgroundColor3 = Colors.CardBg
+            itemRow.BackgroundColor3 = isAuto and Colors.CardHover or Colors.CardBg
             itemRow.ZIndex = 6003
             itemRow.Parent = PresetsScroll
             Instance.new("UICorner", itemRow).CornerRadius = UDim.new(0, 5)
-            AddStroke(itemRow, Colors.Border, 1)
+            AddStroke(itemRow, isAuto and Colors.Accent or Colors.Border, 1)
 
             local itemLabel = Instance.new("TextLabel")
-            itemLabel.Text = cfgName
-            itemLabel.Font = Fonts.Medium
-            itemLabel.TextSize = 12
-            itemLabel.TextColor3 = Colors.Text
+            itemLabel.Text = (isAuto and "★ " or "") .. cfgName
+            itemLabel.Font = isAuto and Fonts.Title or Fonts.Medium
+            itemLabel.TextSize = 11
+            itemLabel.TextColor3 = isAuto and Colors.Accent or Colors.Text
             itemLabel.Position = UDim2.new(0, 8, 0, 0)
-            itemLabel.Size = UDim2.new(1, -68, 1, 0)
+            itemLabel.Size = UDim2.new(1, -106, 1, 0)
             itemLabel.TextXAlignment = Enum.TextXAlignment.Left
             itemLabel.TextTruncate = Enum.TextTruncate.AtEnd
             itemLabel.BackgroundTransparency = 1
             itemLabel.ZIndex = 6004
             itemLabel.Parent = itemRow
 
+            -- Load button
             local loadBtn = Instance.new("TextButton")
-            loadBtn.Size = UDim2.new(0, 38, 0, 20)
-            loadBtn.Position = UDim2.new(1, -60, 0.5, -10)
+            loadBtn.Size = UDim2.new(0, 36, 0, 20)
+            loadBtn.Position = UDim2.new(1, -98, 0.5, -10)
             loadBtn.BackgroundColor3 = Colors.Accent
             loadBtn.Text = "Load"
             loadBtn.Font = Fonts.Title
@@ -1072,9 +1278,47 @@ function RaxorHub:Window(GuiConfig)
                 RaxorHub:LoadConfigData(cfgName)
             end)
 
+            -- Overwrite button (Floppy disk icon)
+            local overwriteBtn = Instance.new("ImageButton")
+            overwriteBtn.Size = UDim2.new(0, 18, 0, 18)
+            overwriteBtn.Position = UDim2.new(1, -58, 0.5, -9)
+            overwriteBtn.BackgroundTransparency = 1
+            overwriteBtn.Image = Icons.Save
+            overwriteBtn.ImageColor3 = Colors.SubText
+            overwriteBtn.ZIndex = 6004
+            overwriteBtn.Parent = itemRow
+
+            overwriteBtn.MouseEnter:Connect(function() overwriteBtn.ImageColor3 = Colors.Accent end)
+            overwriteBtn.MouseLeave:Connect(function() overwriteBtn.ImageColor3 = Colors.SubText end)
+            overwriteBtn.MouseButton1Click:Connect(function()
+                RaxorHub:SaveCurrentConfig(cfgName)
+            end)
+
+            -- Star / Autoload button
+            local autoBtn = Instance.new("ImageButton")
+            autoBtn.Size = UDim2.new(0, 18, 0, 18)
+            autoBtn.Position = UDim2.new(1, -38, 0.5, -9)
+            autoBtn.BackgroundTransparency = 1
+            autoBtn.Image = Icons.Star
+            autoBtn.ImageColor3 = isAuto and Colors.Accent or Colors.MutedText
+            autoBtn.ZIndex = 6004
+            autoBtn.Parent = itemRow
+
+            autoBtn.MouseEnter:Connect(function() autoBtn.ImageColor3 = Colors.Accent end)
+            autoBtn.MouseLeave:Connect(function() autoBtn.ImageColor3 = (RaxorHub:GetAutoload() == cfgName) and Colors.Accent or Colors.MutedText end)
+            autoBtn.MouseButton1Click:Connect(function()
+                if RaxorHub:GetAutoload() == cfgName then
+                    RaxorHub:ResetAutoload()
+                else
+                    RaxorHub:SetAutoload(cfgName)
+                end
+                RefreshPresetsList()
+            end)
+
+            -- Delete button
             local delBtn = Instance.new("ImageButton")
             delBtn.Size = UDim2.new(0, 18, 0, 18)
-            delBtn.Position = UDim2.new(1, -20, 0.5, -9)
+            delBtn.Position = UDim2.new(1, -18, 0.5, -9)
             delBtn.BackgroundTransparency = 1
             delBtn.Image = Icons.Trash
             delBtn.ImageColor3 = Colors.SubText
@@ -1089,13 +1333,25 @@ function RaxorHub:Window(GuiConfig)
             end)
         end
     end
+    RaxorHub.RefreshPresetsList = RefreshPresetsList
 
     AddConfigBtn.MouseButton1Click:Connect(function()
         local name = ConfigNameInput.Text
-        if name and name ~= "" then
+        if name and name ~= "" and name ~= "---" then
             RaxorHub:SaveCurrentConfig(name)
             ConfigNameInput.Text = ""
             RefreshPresetsList()
+        end
+    end)
+
+    ConfigNameInput.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local name = ConfigNameInput.Text
+            if name and name ~= "" and name ~= "---" then
+                RaxorHub:SaveCurrentConfig(name)
+                ConfigNameInput.Text = ""
+                RefreshPresetsList()
+            end
         end
     end)
 
@@ -1434,6 +1690,19 @@ function RaxorHub:Window(GuiConfig)
                     UpdateState(Config.ID, state)
                     if Config.Callback then Config.Callback(state) end
                 end)
+
+                local toggleFunc = {
+                    Set = function(self, val)
+                        state = val
+                        VisualUpdate(val)
+                        UpdateState(Config.ID, val)
+                        if Config.Callback then Config.Callback(val) end
+                    end,
+                    Get = function(self)
+                        return state
+                    end
+                }
+                return toggleFunc
             end
 
             -- [[ Slider Control (Blade Dual/Single Modern Slider) ]]
@@ -2151,6 +2420,11 @@ function RaxorHub:Window(GuiConfig)
                 end
 
                 TextBox.Focused:Connect(function() stroke.Color = Colors.Accent end)
+                TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+                    local currentText = TextBox.Text
+                    if Config.ID then UpdateState(Config.ID, currentText) end
+                    if Config.Callback then Config.Callback(currentText, false) end
+                end)
                 TextBox.FocusLost:Connect(function(enterPressed)
                     stroke.Color = Colors.BorderFocus
                     local currentText = TextBox.Text
@@ -2158,7 +2432,17 @@ function RaxorHub:Window(GuiConfig)
                     if Config.Callback then Config.Callback(currentText, enterPressed) end
                 end)
 
-                return Row
+                local inputFunc = {
+                    Instance = TextBox,
+                    Set = function(self, val)
+                        TextBox.Text = tostring(val)
+                        if Config.ID then UpdateState(Config.ID, tostring(val)) end
+                    end,
+                    Get = function(self)
+                        return TextBox.Text
+                    end
+                }
+                return inputFunc
             end
 
             -- [[ Button Control (Blade Sleek Clickable) ]]
@@ -2346,6 +2630,26 @@ function RaxorHub:Window(GuiConfig)
                         end
                     end)
                 end)
+
+                local keybindFunc = {
+                    Set = function(self, key)
+                        if typeof(key) == "EnumItem" then
+                            currentKey = key
+                            BindButton.Text = "[" .. key.Name .. "]"
+                            UpdateState(Config.ID, key.Name)
+                            StartListening()
+                        elseif type(key) == "string" and Enum.KeyCode[key] then
+                            currentKey = Enum.KeyCode[key]
+                            BindButton.Text = "[" .. key .. "]"
+                            UpdateState(Config.ID, key)
+                            StartListening()
+                        end
+                    end,
+                    Get = function(self)
+                        return currentKey
+                    end
+                }
+                return keybindFunc
             end
 
             return sectionItems
