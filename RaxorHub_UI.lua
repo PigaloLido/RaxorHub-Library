@@ -3,7 +3,7 @@
     ║                           RAXORHUB UI                              ║
     ║                  Modern Blade-Client Aesthetic                     ║
     ║           Optimized for PC & Mobile (Performance-Focused)         ║
-    ║                       Version: v2.1.0                              ║
+    ║                       Version: v2.1.1                              ║
     ║                         By : Pigalo                                ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -19,7 +19,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.0"
+local UI_VERSION = "v2.1.1"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -95,13 +95,13 @@ local Colors = {
     Black           = Color3.fromRGB(0, 0, 0)
 }
 
--- [[ Font Configuration - Highly legible for Thai & English ]]
+-- [[ Font Configuration - Valid Roblox Fonts with Full Thai Support ]]
 local Fonts = {
-    Title       = Enum.Font.UbuntuBold,     -- Clean bold headers (renders Thai tone marks properly)
-    Medium      = Enum.Font.UbuntuMedium,   -- Controls & option labels
-    Regular     = Enum.Font.Ubuntu,         -- Descriptions & inputs (no tiny Thai bug)
-    Brand       = Enum.Font.GothamBlack,    -- Stylized brand typography
-    Code        = Enum.Font.Code            -- Numbers & keybind tags
+    Title       = Enum.Font.GothamBold,      -- Valid bold font for titles
+    Medium      = Enum.Font.GothamMedium,    -- Valid medium font for UI labels
+    Regular     = Enum.Font.SourceSansBold,  -- SourceSansBold renders Thai at 100% full scale and bold!
+    Brand       = Enum.Font.GothamBlack,     -- Stylized brand typography
+    Code        = Enum.Font.Code             -- Monospace for values & keybinds
 }
 
 -- [[ Built-in Custom Asset Icons (Blade & RaxorHub White Line Icons) ]]
