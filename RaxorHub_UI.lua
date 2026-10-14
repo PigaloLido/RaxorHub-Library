@@ -1,9 +1,9 @@
 --[[
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
-    ║                  Modern Blade-Client Aesthetic                     ║
+    ║               Cyber Crystal Electric-Blue Aesthetic                ║
     ║           Optimized for PC & Mobile (Performance-Focused)         ║
-    ║                       Version: v2.0.0                              ║
+    ║                       Version: v2.1.0                              ║
     ║                         By : Pigalo                                ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -17,9 +17,9 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local UI_NAME = "RaxorHub_UI"
-local UI_TITLE = "RaxorHub"
+local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.0.0"
+local UI_VERSION = "v2.1.0"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -45,7 +45,7 @@ local RaxorHub = {
     Version = UI_VERSION
 }
 
--- Active overlays tracking
+-- Overlays tracking
 local activeDropdownList = nil
 local activeDropdownArrow = nil
 local activeColorPicker = nil
@@ -54,63 +54,73 @@ local StartBtn = nil
 local PresetsModal = nil
 local IsBinding = false
 local CurrentBreadcrumb = nil
+local BreadcrumbIcon = nil
 
--- [[ Modern Blade-Client Color Scheme ]]
+-- [[ Official Logo ID ]]
+local LOGO_ASSET_ID = "rbxassetid://87425048247573"
+
+-- [[ Cyber Crystal Electric-Blue Color Scheme (Matching Image 3) ]]
 local Colors = {
-    WindowBg        = Color3.fromRGB(15, 16, 20),      -- Deep Dark Slate #0F1014
-    MainCardBg      = Color3.fromRGB(20, 21, 27),      -- Container Card #14151B
-    SidebarBg       = Color3.fromRGB(18, 19, 25),      -- Sidebar Background #121319
-    TopBarBg        = Color3.fromRGB(18, 19, 25),      -- Top Bar Background
-    SectionHeaderBg = Color3.fromRGB(23, 24, 32),      -- Subheaders
-    CardBg          = Color3.fromRGB(24, 25, 33),      -- Item Cards #181921
-    CardHover       = Color3.fromRGB(30, 32, 42),      -- Item Hover
-    CardActive      = Color3.fromRGB(34, 36, 48),      -- Active/Pressed
-    InputBg         = Color3.fromRGB(20, 21, 28),      -- Inputs / Fields
-    DropdownBg      = Color3.fromRGB(22, 23, 31),      -- Flyout menus
-    ModalBg         = Color3.fromRGB(22, 23, 31),      -- Modals / Popups
+    WindowBg        = Color3.fromRGB(3, 7, 18),        -- Deep Midnight Obsidian
+    MainCardBg      = Color3.fromRGB(4, 10, 24),       -- Inner Card Background
+    SidebarBg       = Color3.fromRGB(2, 6, 16),        -- Dark Cyber Sidebar
+    TopBarBg        = Color3.fromRGB(3, 8, 20),        -- Top Bar Glass
+    SectionHeaderBg = Color3.fromRGB(6, 14, 32),       -- Section Headers
+    CardBg          = Color3.fromRGB(5, 13, 30),        -- Item Cards
+    CardHover       = Color3.fromRGB(8, 22, 48),        -- Item Hover State
+    CardActive      = Color3.fromRGB(10, 28, 64),       -- Active Row Background
+    InputBg         = Color3.fromRGB(4, 10, 22),        -- Field Backgrounds
+    DropdownBg      = Color3.fromRGB(5, 14, 32),        -- Dropdown Panels
+    ModalBg         = Color3.fromRGB(5, 14, 32),        -- Popup Windows
 
-    Accent          = Color3.fromRGB(124, 92, 252),    -- Blade Purple #7C5CFC
-    AccentHover     = Color3.fromRGB(142, 114, 255),   -- Soft Purple Hover #8E72FF
-    AccentMuted     = Color3.fromRGB(75, 58, 140),     -- Low Accent
-    AccentGlow      = Color3.fromRGB(124, 92, 252),    -- Glow Highlights
+    -- Electric Blue Accents
+    Accent          = Color3.fromRGB(0, 162, 255),      -- Radiant Electric Cyan
+    AccentHover     = Color3.fromRGB(45, 190, 255),     -- Soft Neon Cyan
+    AccentGlow      = Color3.fromRGB(0, 130, 230),      -- Deep Neon Blue
+    AccentDark      = Color3.fromRGB(0, 60, 130),       -- Muted Blue Tint
 
-    Text            = Color3.fromRGB(245, 246, 250),   -- Primary White Text
-    SubText         = Color3.fromRGB(140, 144, 160),   -- Secondary Gray Text #8C90A0
-    MutedText       = Color3.fromRGB(90, 94, 110),     -- Muted / Placeholder Text #5A5E6E
+    -- High-Contrast Text for Crisp Thai & English Reading
+    Text            = Color3.fromRGB(250, 252, 255),    -- Pure White
+    SubText         = Color3.fromRGB(160, 188, 225),    -- High-Contrast Readable Sky-Gray (Thai readable)
+    MutedText       = Color3.fromRGB(95, 125, 165),     -- Secondary Muted Info
 
-    Border          = Color3.fromRGB(34, 36, 46),      -- Subtle Border #22242E
-    BorderFocus     = Color3.fromRGB(56, 59, 76),      -- Focused Border #383B4C
-    BorderActive    = Color3.fromRGB(124, 92, 252),    -- Active Purple Border
+    -- Neon Glowing Borders
+    Border          = Color3.fromRGB(0, 95, 195),       -- Cyan/Blue Neon Border Stroke
+    BorderFocus     = Color3.fromRGB(0, 175, 255),      -- Highlighted Border
+    BorderActive    = Color3.fromRGB(0, 215, 255),      -- Active Glow
 
-    CloseRed        = Color3.fromRGB(235, 68, 75),     -- Close Button Red
-    CloseRedHover   = Color3.fromRGB(255, 85, 92),
-    ControlBtn      = Color3.fromRGB(28, 30, 40),      -- Window Control Buttons
+    CloseRed        = Color3.fromRGB(240, 65, 75),      -- Red Close
+    CloseRedHover   = Color3.fromRGB(255, 85, 95),
+    ControlBtn      = Color3.fromRGB(8, 18, 38),        -- Controls
 
-    SwitchOn        = Color3.fromRGB(124, 92, 252),    -- Toggle Switch Active
-    SwitchOff       = Color3.fromRGB(36, 38, 50),      -- Toggle Switch Inactive
+    SwitchOn        = Color3.fromRGB(0, 162, 255),      -- Active Switch Glow
+    SwitchOff       = Color3.fromRGB(16, 26, 48),       -- Inactive Switch Track
 
-    ButtonBg        = Color3.fromRGB(32, 34, 45),
-    ButtonHover     = Color3.fromRGB(42, 45, 60),
-    ButtonPress     = Color3.fromRGB(25, 27, 36),
+    ButtonBg        = Color3.fromRGB(8, 20, 44),
+    ButtonHover     = Color3.fromRGB(14, 32, 68),
+    ButtonPress     = Color3.fromRGB(5, 14, 32),
     White           = Color3.fromRGB(255, 255, 255),
     Black           = Color3.fromRGB(0, 0, 0)
 }
 
 local Icons = {
-    Logo        = "rbxassetid://10709791437", -- Sleek lightning / blade icon
-    Search      = "rbxassetid://6031154871",  -- Magnifying glass
-    Folder      = "rbxassetid://6034176461",  -- Presets / Folder
-    ChevronDown = "rbxassetid://6034818372",  -- Arrow down
-    Checkmark   = "rbxassetid://6031094667",  -- Checkmark
-    Trash       = "rbxassetid://6031079143",  -- Delete
-    Plus        = "rbxassetid://6031094678",  -- Plus
-    Close       = "rbxassetid://6031094678",  -- Close / Cross
-    Edit        = "rbxassetid://6031075931"   -- Edit
+    Logo        = LOGO_ASSET_ID,
+    Search      = "rbxassetid://6031154871",
+    Folder      = "rbxassetid://6034176461",
+    ChevronDown = "rbxassetid://6034818372",
+    Checkmark   = "rbxassetid://6031094667",
+    Trash       = "rbxassetid://6031079143",
+    Plus        = "rbxassetid://6031094678",
+    Close       = "rbxassetid://6031094678",
+    Edit        = "rbxassetid://6031075931",
+    Crown       = "rbxassetid://6031086427", -- VIP Crown icon
+    Sword       = "rbxassetid://6031075931"  -- Combat / Sword icon
 }
 
+-- [[ Element Sizing - Generous space for Thai characters & tone marks ]]
 local SizeItem = {
-    BoxItem   = UDim2.new(1, -4, 0, 52),
-    TitleItem = UDim2.new(1, -4, 0, 36)
+    BoxItem   = UDim2.new(1, -4, 0, 62),  -- Height 62px prevents Thai vowel clipping!
+    TitleItem = UDim2.new(1, -4, 0, 40)
 }
 
 -- [[ Helper Utilities ]]
@@ -145,7 +155,7 @@ local function CloseAllDropdowns()
 end
 RaxorHub.CloseAllDropdowns = CloseAllDropdowns
 
--- Fast and lightweight dragging support (PC & Mobile Touch)
+-- Touch & Mouse dragging (PC & Mobile)
 local function MakeDraggable(obj, dragPart)
     local dragging = false
     local dragStart = nil
@@ -177,7 +187,6 @@ local function MakeDraggable(obj, dragPart)
     end)
 end
 
--- Resizing support with mobile constraints
 local function MakeResizable(obj, dragPart)
     local dragging = false
     local dragStart = nil
@@ -194,7 +203,7 @@ local function MakeResizable(obj, dragPart)
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
-            local minW = (UserInputService.TouchEnabled and 480) or 540
+            local minW = (UserInputService.TouchEnabled and 480) or 520
             local minH = (UserInputService.TouchEnabled and 320) or 360
             local newWidth = math.max(minW, startSize.X.Offset + delta.X)
             local newHeight = math.max(minH, startSize.Y.Offset + delta.Y)
@@ -209,7 +218,7 @@ local function MakeResizable(obj, dragPart)
     end)
 end
 
--- Floating Mobile/PC Open Button (StartBtn)
+-- Floating Button (StartBtn) with boundary clamp
 local wasDraggingStart = false
 local lastRatioX = 0.5
 local lastRatioY = 0.05
@@ -268,7 +277,7 @@ local function MakeDraggableStartBtn(obj, dragPart, clickCallback)
     end)
 end
 
--- [[ Config System ]]
+-- [[ Config Presets System ]]
 function RaxorHub:GetConfigList()
     if not listfiles or not isfolder or not isfolder(ConfigFolder) then return {} end
     local files = listfiles(ConfigFolder)
@@ -410,7 +419,7 @@ function RaxorHub:CheckPlaceId(allowedMaps)
     return false
 end
 
--- [[ Modern Notification Toast System ]]
+-- [[ Modern Toast Notification System ]]
 local NotificationHolder = nil
 function RaxorHub:Notify(config)
     if not NotificationHolder then return end
@@ -420,14 +429,14 @@ function RaxorHub:Notify(config)
     local duration = config.Duration or 3.5
 
     local Toast = Instance.new("Frame")
-    Toast.Size = UDim2.new(1, 0, 0, 56)
+    Toast.Size = UDim2.new(1, 0, 0, 60)
     Toast.Position = UDim2.new(1, 40, 0, 0)
     Toast.BackgroundColor3 = Colors.ModalBg
     Toast.BorderSizePixel = 0
     Toast.ZIndex = 9000
     Toast.Parent = NotificationHolder
     Instance.new("UICorner", Toast).CornerRadius = UDim.new(0, 8)
-    AddStroke(Toast, Colors.BorderFocus, 1)
+    AddStroke(Toast, Colors.BorderFocus, 1.2)
 
     local AccentBar = Instance.new("Frame")
     AccentBar.Size = UDim2.new(0, 3, 1, -12)
@@ -452,18 +461,17 @@ function RaxorHub:Notify(config)
     TTitle.Parent = Toast
 
     local TContent = Instance.new("TextLabel")
-    TContent.Size = UDim2.new(1, -24, 0, 16)
+    TContent.Size = UDim2.new(1, -24, 0, 20)
     TContent.Position = UDim2.new(0, 14, 0, 28)
     TContent.Text = content
-    TContent.Font = Enum.Font.Gotham
-    TContent.TextSize = 11
+    TContent.Font = Enum.Font.GothamMedium
+    TContent.TextSize = 12
     TContent.TextColor3 = Colors.SubText
     TContent.TextXAlignment = Enum.TextXAlignment.Left
     TContent.BackgroundTransparency = 1
     TContent.ZIndex = 9001
     TContent.Parent = Toast
 
-    -- Progress Line at bottom
     local ProgressLine = Instance.new("Frame")
     ProgressLine.Size = UDim2.new(1, 0, 0, 2)
     ProgressLine.Position = UDim2.new(0, 0, 1, -2)
@@ -473,7 +481,6 @@ function RaxorHub:Notify(config)
     ProgressLine.Parent = Toast
     Instance.new("UICorner", ProgressLine).CornerRadius = UDim.new(1, 0)
 
-    -- Slide in animation
     Tween(Toast, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
     Tween(ProgressLine, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)})
 
@@ -511,15 +518,14 @@ function RaxorHub:Window(GuiConfig)
         ScreenGui.Parent = PlayerGui
     end
 
-    -- Responsive default size for Mobile & PC
     local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
     local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
     local frameW = math.clamp(viewport.X * 0.85, 520, 720)
-    local frameH = math.clamp(viewport.Y * 0.82, 360, 480)
+    local frameH = math.clamp(viewport.Y * 0.82, 370, 480)
 
     if not isMobile and viewport.X > 900 then
-        frameW = 700
-        frameH = 460
+        frameW = 710
+        frameH = 470
     end
 
     MainFrame = Instance.new("Frame")
@@ -534,13 +540,25 @@ function RaxorHub:Window(GuiConfig)
     MainFrame.Parent = ScreenGui
 
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
-    AddStroke(MainFrame, Colors.Border, 1)
+    -- Glowing Neon Blue Outer Border (Blade Cyber Crystal)
+    AddStroke(MainFrame, Colors.Border, 1.5)
 
-    -- Notification Stack Holder
+    -- Background shard / texture support
+    if GuiConfig.Background then
+        local BgImg = Instance.new("ImageLabel")
+        BgImg.Name = "CustomBackground"
+        BgImg.Size = UDim2.new(1, 0, 1, 0)
+        BgImg.BackgroundTransparency = 1
+        BgImg.Image = GuiConfig.Background
+        BgImg.ScaleType = Enum.ScaleType.Crop
+        BgImg.ZIndex = 11
+        BgImg.Parent = MainFrame
+    end
+
     NotificationHolder = Instance.new("Frame")
     NotificationHolder.Name = "NotificationHolder"
-    NotificationHolder.Size = UDim2.new(0, 240, 1, -40)
-    NotificationHolder.Position = UDim2.new(1, -250, 1, -20)
+    NotificationHolder.Size = UDim2.new(0, 250, 1, -40)
+    NotificationHolder.Position = UDim2.new(1, -260, 1, -20)
     NotificationHolder.AnchorPoint = Vector2.new(0, 1)
     NotificationHolder.BackgroundTransparency = 1
     NotificationHolder.ZIndex = 8999
@@ -553,20 +571,19 @@ function RaxorHub:Window(GuiConfig)
     NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NotifLayout.Parent = NotificationHolder
 
-    -- Floating Mobile / PC Toggle Button
+    -- [[ Floating Toggle Button (StartBtn) with Raxor Logo ]]
     StartBtn = Instance.new("ImageButton")
     RaxorHub.StartBtn = StartBtn
     StartBtn.Name = "StartBtn"
-    StartBtn.Size = UDim2.new(0, 48, 0, 48)
-    StartBtn.Position = UDim2.new(0.5, -24, 0.05, 0)
+    StartBtn.Size = UDim2.new(0, 50, 0, 50)
+    StartBtn.Position = UDim2.new(0.5, -25, 0.05, 0)
     StartBtn.BackgroundColor3 = Colors.SidebarBg
-    StartBtn.Image = "rbxassetid://10709791437"
-    StartBtn.ImageColor3 = Colors.Accent
+    StartBtn.Image = GuiConfig.Logo or LOGO_ASSET_ID
     StartBtn.Visible = false
     StartBtn.ZIndex = 8000
     StartBtn.Parent = ScreenGui
     Instance.new("UICorner", StartBtn).CornerRadius = UDim.new(0, 12)
-    AddStroke(StartBtn, Colors.BorderActive, 1.5)
+    AddStroke(StartBtn, Colors.BorderFocus, 2)
 
     local function ToggleUI()
         CloseAllDropdowns()
@@ -597,11 +614,11 @@ function RaxorHub:Window(GuiConfig)
         ToggleUI()
     end)
 
-    -- [[ Resizer Corner (PC) ]]
+    -- [[ Resize Handle ]]
     local ResizeHandle = Instance.new("Frame")
     ResizeHandle.Name = "ResizeHandle"
-    ResizeHandle.Size = UDim2.new(0, 18, 0, 18)
-    ResizeHandle.Position = UDim2.new(1, -18, 1, -18)
+    ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
+    ResizeHandle.Position = UDim2.new(1, -20, 1, -20)
     ResizeHandle.BackgroundTransparency = 1
     ResizeHandle.ZIndex = 5000
     ResizeHandle.Parent = MainFrame
@@ -626,8 +643,8 @@ function RaxorHub:Window(GuiConfig)
 
     MakeResizable(MainFrame, ResizeHandle)
 
-    -- [[ Left Sidebar (Blade Style) ]]
-    local SidebarWidth = 180
+    -- [[ Sidebar ]]
+    local SidebarWidth = 185
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, SidebarWidth, 1, 0)
@@ -638,66 +655,76 @@ function RaxorHub:Window(GuiConfig)
     Sidebar.Parent = MainFrame
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
 
-    -- Sidebar Right Divider Line
+    -- Optional Crystal Shard Overlay on Sidebar Bottom-Left (Matching Image 3)
+    if GuiConfig.SidebarOverlay then
+        local ShardOverlay = Instance.new("ImageLabel")
+        ShardOverlay.Name = "ShardOverlay"
+        ShardOverlay.Size = UDim2.new(1, 0, 0.5, 0)
+        ShardOverlay.Position = UDim2.new(0, 0, 0.5, 0)
+        ShardOverlay.BackgroundTransparency = 1
+        ShardOverlay.Image = GuiConfig.SidebarOverlay
+        ShardOverlay.ScaleType = Enum.ScaleType.Fit
+        ShardOverlay.ZIndex = 21
+        ShardOverlay.Parent = Sidebar
+    end
+
     local SidebarDivider = Instance.new("Frame")
     SidebarDivider.Size = UDim2.new(0, 1, 1, 0)
     SidebarDivider.Position = UDim2.new(1, -1, 0, 0)
     SidebarDivider.BackgroundColor3 = Colors.Border
     SidebarDivider.BorderSizePixel = 0
-    SidebarDivider.ZIndex = 21
+    SidebarDivider.ZIndex = 22
     SidebarDivider.Parent = Sidebar
 
-    -- Logo & Brand Header in Sidebar
+    -- Brand Container
     local BrandContainer = Instance.new("Frame")
-    BrandContainer.Size = UDim2.new(1, 0, 0, 50)
+    BrandContainer.Size = UDim2.new(1, 0, 0, 56)
     BrandContainer.BackgroundTransparency = 1
-    BrandContainer.ZIndex = 22
+    BrandContainer.ZIndex = 23
     BrandContainer.Parent = Sidebar
 
     local BrandLogo = Instance.new("ImageLabel")
-    BrandLogo.Size = UDim2.new(0, 26, 0, 26)
-    BrandLogo.Position = UDim2.new(0, 14, 0.5, -13)
-    BrandLogo.Image = GuiConfig.Logo or Icons.Logo
-    BrandLogo.ImageColor3 = Colors.Accent
+    BrandLogo.Size = UDim2.new(0, 36, 0, 36)
+    BrandLogo.Position = UDim2.new(0, 12, 0.5, -18)
+    BrandLogo.Image = GuiConfig.Logo or LOGO_ASSET_ID
     BrandLogo.BackgroundTransparency = 1
-    BrandLogo.ZIndex = 23
+    BrandLogo.ZIndex = 24
     BrandLogo.Parent = BrandContainer
 
     local BrandTitle = Instance.new("TextLabel")
     BrandTitle.Text = string.upper(GuiConfig.Title or "RAXOR")
     BrandTitle.Font = Enum.Font.GothamBlack
-    BrandTitle.TextSize = 16
+    BrandTitle.TextSize = 17
     BrandTitle.TextColor3 = Colors.Text
-    BrandTitle.Position = UDim2.new(0, 48, 0.5, -9)
-    BrandTitle.Size = UDim2.new(1, -54, 0, 18)
+    BrandTitle.Position = UDim2.new(0, 54, 0.5, -9)
+    BrandTitle.Size = UDim2.new(1, -58, 0, 18)
     BrandTitle.TextXAlignment = Enum.TextXAlignment.Left
     BrandTitle.BackgroundTransparency = 1
-    BrandTitle.ZIndex = 23
+    BrandTitle.ZIndex = 24
     BrandTitle.Parent = BrandContainer
 
-    -- Sidebar Tab Navigation Scroll
     local SidebarScroll = Instance.new("ScrollingFrame")
-    SidebarScroll.Size = UDim2.new(1, -8, 1, -118)
-    SidebarScroll.Position = UDim2.new(0, 4, 0, 52)
+    SidebarScroll.Size = UDim2.new(1, -8, 1, -126)
+    SidebarScroll.Position = UDim2.new(0, 4, 0, 58)
     SidebarScroll.BackgroundTransparency = 1
     SidebarScroll.BorderSizePixel = 0
     SidebarScroll.ScrollBarThickness = 0
     SidebarScroll.ScrollingEnabled = true
     SidebarScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     SidebarScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    SidebarScroll.ZIndex = 22
+    SidebarScroll.ZIndex = 23
     SidebarScroll.Parent = Sidebar
 
     local SidebarLayout = Instance.new("UIListLayout")
-    SidebarLayout.Padding = UDim.new(0, 3)
+    SidebarLayout.Padding = UDim.new(0, 4)
     SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SidebarLayout.Parent = SidebarScroll
 
-    -- [[ User Profile Card at Bottom Left (Blade Past Owl Widget) ]]
+    -- [[ Profile Card with Crown (Matching Image 3 God_Player) ]]
     local ProfileCard = Instance.new("Frame")
     ProfileCard.Name = "ProfileCard"
-    ProfileCard.Size = UDim2.new(1, -14, 0, 50)
-    ProfileCard.Position = UDim2.new(0, 7, 1, -58)
+    ProfileCard.Size = UDim2.new(1, -16, 0, 52)
+    ProfileCard.Position = UDim2.new(0, 8, 1, -60)
     ProfileCard.BackgroundColor3 = Colors.CardBg
     ProfileCard.BorderSizePixel = 0
     ProfileCard.ZIndex = 25
@@ -706,10 +733,10 @@ function RaxorHub:Window(GuiConfig)
     AddStroke(ProfileCard, Colors.Border, 1)
 
     local AvatarImg = Instance.new("ImageLabel")
-    AvatarImg.Size = UDim2.new(0, 32, 0, 32)
-    AvatarImg.Position = UDim2.new(0, 9, 0.5, -16)
+    AvatarImg.Size = UDim2.new(0, 34, 0, 34)
+    AvatarImg.Position = UDim2.new(0, 8, 0.5, -17)
     AvatarImg.BackgroundColor3 = Colors.MainCardBg
-    AvatarImg.Image = "rbxassetid://10709791437"
+    AvatarImg.Image = LOGO_ASSET_ID
     AvatarImg.ZIndex = 26
     AvatarImg.Parent = ProfileCard
     Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
@@ -727,11 +754,11 @@ function RaxorHub:Window(GuiConfig)
     end)
 
     local ProfileName = Instance.new("TextLabel")
-    ProfileName.Text = LocalPlayer and LocalPlayer.DisplayName or "User"
+    ProfileName.Text = LocalPlayer and LocalPlayer.DisplayName or "God_Player"
     ProfileName.Font = Enum.Font.GothamBold
-    ProfileName.TextSize = 12
+    ProfileName.TextSize = 13
     ProfileName.TextColor3 = Colors.Text
-    ProfileName.Size = UDim2.new(1, -50, 0, 16)
+    ProfileName.Size = UDim2.new(1, -74, 0, 16)
     ProfileName.Position = UDim2.new(0, 48, 0, 9)
     ProfileName.TextXAlignment = Enum.TextXAlignment.Left
     ProfileName.TextTruncate = Enum.TextTruncate.AtEnd
@@ -740,22 +767,32 @@ function RaxorHub:Window(GuiConfig)
     ProfileName.Parent = ProfileCard
 
     local ProfileStatus = Instance.new("TextLabel")
-    ProfileStatus.Text = GuiConfig.ProfileTag or "Till: Lifetime"
-    ProfileStatus.Font = Enum.Font.Gotham
-    ProfileStatus.TextSize = 10
+    ProfileStatus.Text = GuiConfig.ProfileTag or "Tilt: Lifetime"
+    ProfileStatus.Font = Enum.Font.GothamMedium
+    ProfileStatus.TextSize = 11
     ProfileStatus.TextColor3 = Colors.SubText
-    ProfileStatus.Size = UDim2.new(1, -50, 0, 14)
-    ProfileStatus.Position = UDim2.new(0, 48, 0, 26)
+    ProfileStatus.Size = UDim2.new(1, -74, 0, 14)
+    ProfileStatus.Position = UDim2.new(0, 48, 0, 27)
     ProfileStatus.TextXAlignment = Enum.TextXAlignment.Left
     ProfileStatus.TextTruncate = Enum.TextTruncate.AtEnd
     ProfileStatus.BackgroundTransparency = 1
     ProfileStatus.ZIndex = 26
     ProfileStatus.Parent = ProfileCard
 
+    -- Crown Icon on Profile Card (Image 3)
+    local CrownIcon = Instance.new("ImageLabel")
+    CrownIcon.Size = UDim2.new(0, 18, 0, 18)
+    CrownIcon.Position = UDim2.new(1, -26, 0.5, -9)
+    CrownIcon.Image = Icons.Crown
+    CrownIcon.ImageColor3 = Colors.Accent
+    CrownIcon.BackgroundTransparency = 1
+    CrownIcon.ZIndex = 26
+    CrownIcon.Parent = ProfileCard
+
     -- [[ Top Bar Area ]]
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
-    TopBar.Size = UDim2.new(1, -SidebarWidth, 0, 50)
+    TopBar.Size = UDim2.new(1, -SidebarWidth, 0, 52)
     TopBar.Position = UDim2.new(0, SidebarWidth, 0, 0)
     TopBar.BackgroundTransparency = 1
     TopBar.BorderSizePixel = 0
@@ -764,7 +801,6 @@ function RaxorHub:Window(GuiConfig)
 
     MakeDraggable(MainFrame, TopBar)
 
-    -- Top Bar Divider Line
     local TopDivider = Instance.new("Frame")
     TopDivider.Size = UDim2.new(1, 0, 0, 1)
     TopDivider.Position = UDim2.new(0, 0, 1, -1)
@@ -773,67 +809,46 @@ function RaxorHub:Window(GuiConfig)
     TopDivider.ZIndex = 31
     TopDivider.Parent = TopBar
 
-    -- Breadcrumb Navigation Label (`Combat  ->  KillAura`)
+    -- [[ Top Bar Tab Header Capsule Pill (Matching Image 3) ]]
+    local TabPillBadge = Instance.new("Frame")
+    TabPillBadge.Name = "TabPillBadge"
+    TabPillBadge.Size = UDim2.new(0, 140, 0, 32)
+    TabPillBadge.Position = UDim2.new(0, 14, 0.5, 0)
+    TabPillBadge.AnchorPoint = Vector2.new(0, 0.5)
+    TabPillBadge.BackgroundColor3 = Colors.CardBg
+    TabPillBadge.ZIndex = 32
+    TabPillBadge.Parent = TopBar
+    Instance.new("UICorner", TabPillBadge).CornerRadius = UDim.new(0, 6)
+    AddStroke(TabPillBadge, Colors.Border, 1)
+
+    BreadcrumbIcon = Instance.new("ImageLabel")
+    BreadcrumbIcon.Size = UDim2.new(0, 16, 0, 16)
+    BreadcrumbIcon.Position = UDim2.new(0, 10, 0.5, -8)
+    BreadcrumbIcon.Image = Icons.Sword
+    BreadcrumbIcon.ImageColor3 = Colors.Accent
+    BreadcrumbIcon.BackgroundTransparency = 1
+    BreadcrumbIcon.ZIndex = 33
+    BreadcrumbIcon.Parent = TabPillBadge
+
     CurrentBreadcrumb = Instance.new("TextLabel")
     CurrentBreadcrumb.Name = "Breadcrumb"
-    CurrentBreadcrumb.Size = UDim2.new(0, 180, 1, 0)
-    CurrentBreadcrumb.Position = UDim2.new(0, 14, 0, 0)
-    CurrentBreadcrumb.Text = "Overview"
+    CurrentBreadcrumb.Size = UDim2.new(1, -34, 1, 0)
+    CurrentBreadcrumb.Position = UDim2.new(0, 30, 0, 0)
+    CurrentBreadcrumb.Text = "Combat"
     CurrentBreadcrumb.Font = Enum.Font.GothamBold
     CurrentBreadcrumb.TextSize = 13
-    CurrentBreadcrumb.TextColor3 = Colors.SubText
+    CurrentBreadcrumb.TextColor3 = Colors.Text
     CurrentBreadcrumb.TextXAlignment = Enum.TextXAlignment.Left
     CurrentBreadcrumb.BackgroundTransparency = 1
-    CurrentBreadcrumb.ZIndex = 32
-    CurrentBreadcrumb.Parent = TopBar
+    CurrentBreadcrumb.ZIndex = 33
+    CurrentBreadcrumb.Parent = TabPillBadge
 
-    -- Search Element Box (Blade style search bar)
-    local SearchContainer = Instance.new("Frame")
-    SearchContainer.Name = "SearchContainer"
-    SearchContainer.Size = UDim2.new(0, 190, 0, 30)
-    SearchContainer.Position = UDim2.new(0, 200, 0.5, -15)
-    SearchContainer.BackgroundColor3 = Colors.InputBg
-    SearchContainer.ZIndex = 32
-    SearchContainer.Parent = TopBar
-    Instance.new("UICorner", SearchContainer).CornerRadius = UDim.new(0, 6)
-    local searchStroke = AddStroke(SearchContainer, Colors.Border, 1)
-
-    local SearchIcon = Instance.new("ImageLabel")
-    SearchIcon.Size = UDim2.new(0, 14, 0, 14)
-    SearchIcon.Position = UDim2.new(0, 8, 0.5, -7)
-    SearchIcon.Image = Icons.Search
-    SearchIcon.ImageColor3 = Colors.MutedText
-    SearchIcon.BackgroundTransparency = 1
-    SearchIcon.ZIndex = 33
-    SearchIcon.Parent = SearchContainer
-
-    local SearchInput = Instance.new("TextBox")
-    SearchInput.Size = UDim2.new(1, -30, 1, 0)
-    SearchInput.Position = UDim2.new(0, 26, 0, 0)
-    SearchInput.BackgroundTransparency = 1
-    SearchInput.Text = ""
-    SearchInput.PlaceholderText = "Search element..."
-    SearchInput.PlaceholderColor3 = Colors.MutedText
-    SearchInput.TextColor3 = Colors.Text
-    SearchInput.Font = Enum.Font.Gotham
-    SearchInput.TextSize = 12
-    SearchInput.TextXAlignment = Enum.TextXAlignment.Left
-    SearchInput.ClearTextOnFocus = false
-    SearchInput.ZIndex = 33
-    SearchInput.Parent = SearchContainer
-
-    SearchInput.Focused:Connect(function()
-        searchStroke.Color = Colors.Accent
-    end)
-    SearchInput.FocusLost:Connect(function()
-        searchStroke.Color = Colors.Border
-    end)
-
-    -- Top Right Controls (User Name, Folder/Presets, Min, Close)
+    -- [[ Top Right Controls (Fixed, Never Overlaps) ]]
     local Controls = Instance.new("Frame")
-    Controls.Size = UDim2.new(0, 150, 1, 0)
-    Controls.Position = UDim2.new(1, -12, 0, 0)
-    Controls.AnchorPoint = Vector2.new(1, 0)
+    Controls.Name = "Controls"
+    Controls.Size = UDim2.new(0, 100, 0, 32)
+    Controls.Position = UDim2.new(1, -10, 0.5, 0)
+    Controls.AnchorPoint = Vector2.new(1, 0.5)
     Controls.BackgroundTransparency = 1
     Controls.ZIndex = 35
     Controls.Parent = TopBar
@@ -842,11 +857,10 @@ function RaxorHub:Window(GuiConfig)
     ControlLayout.FillDirection = Enum.FillDirection.Horizontal
     ControlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     ControlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    ControlLayout.Padding = UDim.new(0, 6)
+    ControlLayout.Padding = UDim.new(0, 5)
     ControlLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ControlLayout.Parent = Controls
 
-    -- Helper to create sleek top buttons
     local function CreateTopIconBtn(name, iconId, baseColor, hoverColor, order, callback)
         local btn = Instance.new("ImageButton")
         btn.Name = name
@@ -871,48 +885,101 @@ function RaxorHub:Window(GuiConfig)
         return btn
     end
 
-    -- Folder Button -> Opens Presets / Config Modal (Blade Image 7)
     CreateTopIconBtn("FolderBtn", Icons.Folder, Colors.ControlBtn, Colors.ButtonHover, 1, function()
         if PresetsModal then
             PresetsModal.Visible = not PresetsModal.Visible
         end
     end)
 
-    -- Minimize Button
     CreateTopIconBtn("MinBtn", "rbxassetid://6035047409", Colors.ControlBtn, Colors.ButtonHover, 2, function()
         ToggleUI()
     end)
 
-    -- Close Button
     CreateTopIconBtn("CloseBtn", Icons.Close, Colors.ControlBtn, Colors.CloseRed, 3, function()
         RaxorHub:ResetAllSettings()
         task.wait(0.1)
         ScreenGui:Destroy()
     end)
 
-    -- [[ Main Content Container ]]
+    -- [[ Dynamic Search Box (Placed before Controls to NEVER collide) ]]
+    local SearchContainer = Instance.new("Frame")
+    SearchContainer.Name = "SearchContainer"
+    SearchContainer.Size = UDim2.new(0, 160, 0, 30)
+    SearchContainer.Position = UDim2.new(1, -118, 0.5, 0)
+    SearchContainer.AnchorPoint = Vector2.new(1, 0.5)
+    SearchContainer.BackgroundColor3 = Colors.InputBg
+    SearchContainer.ZIndex = 32
+    SearchContainer.Parent = TopBar
+    Instance.new("UICorner", SearchContainer).CornerRadius = UDim.new(0, 6)
+    local searchStroke = AddStroke(SearchContainer, Colors.Border, 1)
+
+    local SearchIcon = Instance.new("ImageLabel")
+    SearchIcon.Size = UDim2.new(0, 14, 0, 14)
+    SearchIcon.Position = UDim2.new(0, 8, 0.5, -7)
+    SearchIcon.Image = Icons.Search
+    SearchIcon.ImageColor3 = Colors.MutedText
+    SearchIcon.BackgroundTransparency = 1
+    SearchIcon.ZIndex = 33
+    SearchIcon.Parent = SearchContainer
+
+    local SearchInput = Instance.new("TextBox")
+    SearchInput.Size = UDim2.new(1, -30, 1, 0)
+    SearchInput.Position = UDim2.new(0, 26, 0, 0)
+    SearchInput.BackgroundTransparency = 1
+    SearchInput.Text = ""
+    SearchInput.PlaceholderText = "Search element..."
+    SearchInput.PlaceholderColor3 = Colors.MutedText
+    SearchInput.TextColor3 = Colors.Text
+    SearchInput.Font = Enum.Font.GothamMedium
+    SearchInput.TextSize = 12
+    SearchInput.TextXAlignment = Enum.TextXAlignment.Left
+    SearchInput.ClearTextOnFocus = false
+    SearchInput.ZIndex = 33
+    SearchInput.Parent = SearchContainer
+
+    SearchInput.Focused:Connect(function()
+        searchStroke.Color = Colors.Accent
+    end)
+    SearchInput.FocusLost:Connect(function()
+        searchStroke.Color = Colors.Border
+    end)
+
+    -- Dynamic Auto-Responsive Adjustment when Window Resizes
+    TopBar:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        local topBarW = TopBar.AbsoluteSize.X
+        if topBarW < 330 then
+            SearchContainer.Visible = false
+        else
+            SearchContainer.Visible = true
+            local availableSpace = topBarW - 140 - 118 - 20
+            local targetW = math.clamp(availableSpace, 90, 165)
+            SearchContainer.Size = UDim2.new(0, targetW, 0, 30)
+        end
+    end)
+
+    -- [[ Content Area ]]
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Name = "ContentContainer"
-    ContentContainer.Size = UDim2.new(1, -SidebarWidth, 1, -50)
-    ContentContainer.Position = UDim2.new(0, SidebarWidth, 0, 50)
+    ContentContainer.Size = UDim2.new(1, -SidebarWidth, 1, -52)
+    ContentContainer.Position = UDim2.new(0, SidebarWidth, 0, 52)
     ContentContainer.BackgroundColor3 = Colors.WindowBg
     ContentContainer.BorderSizePixel = 0
     ContentContainer.ClipsDescendants = true
     ContentContainer.ZIndex = 25
     ContentContainer.Parent = MainFrame
 
-    -- [[ Presets Modal Popup (Matches Blade Image 7) ]]
+    -- [[ Presets Modal ]]
     PresetsModal = Instance.new("Frame")
     PresetsModal.Name = "PresetsModal"
     PresetsModal.Size = UDim2.new(0, 240, 0, 290)
-    PresetsModal.Position = UDim2.new(1, -252, 0, 52)
+    PresetsModal.Position = UDim2.new(1, -252, 0, 54)
     PresetsModal.BackgroundColor3 = Colors.ModalBg
     PresetsModal.BorderSizePixel = 0
     PresetsModal.Visible = false
     PresetsModal.ZIndex = 6000
     PresetsModal.Parent = MainFrame
     Instance.new("UICorner", PresetsModal).CornerRadius = UDim.new(0, 8)
-    AddStroke(PresetsModal, Colors.BorderFocus, 1)
+    AddStroke(PresetsModal, Colors.BorderFocus, 1.2)
 
     local PresetsHeader = Instance.new("Frame")
     PresetsHeader.Size = UDim2.new(1, 0, 0, 36)
@@ -941,7 +1008,6 @@ function RaxorHub:Window(GuiConfig)
     PresetsTitle.ZIndex = 6002
     PresetsTitle.Parent = PresetsHeader
 
-    -- New Config Input & Add Button
     local ConfigInputFrame = Instance.new("Frame")
     ConfigInputFrame.Size = UDim2.new(1, -16, 0, 28)
     ConfigInputFrame.Position = UDim2.new(0, 8, 0, 38)
@@ -958,8 +1024,8 @@ function RaxorHub:Window(GuiConfig)
     ConfigNameInput.PlaceholderText = "New config name..."
     ConfigNameInput.PlaceholderColor3 = Colors.MutedText
     ConfigNameInput.TextColor3 = Colors.Text
-    ConfigNameInput.Font = Enum.Font.Gotham
-    ConfigNameInput.TextSize = 11
+    ConfigNameInput.Font = Enum.Font.GothamMedium
+    ConfigNameInput.TextSize = 12
     ConfigNameInput.TextXAlignment = Enum.TextXAlignment.Left
     ConfigNameInput.ClearTextOnFocus = false
     ConfigNameInput.ZIndex = 6003
@@ -1002,7 +1068,7 @@ function RaxorHub:Window(GuiConfig)
             local emptyLabel = Instance.new("TextLabel")
             emptyLabel.Size = UDim2.new(1, 0, 0, 40)
             emptyLabel.Text = "No saved configs"
-            emptyLabel.Font = Enum.Font.Gotham
+            emptyLabel.Font = Enum.Font.GothamMedium
             emptyLabel.TextSize = 11
             emptyLabel.TextColor3 = Colors.MutedText
             emptyLabel.BackgroundTransparency = 1
@@ -1023,7 +1089,7 @@ function RaxorHub:Window(GuiConfig)
             local itemLabel = Instance.new("TextLabel")
             itemLabel.Text = cfgName
             itemLabel.Font = Enum.Font.GothamMedium
-            itemLabel.TextSize = 11
+            itemLabel.TextSize = 12
             itemLabel.TextColor3 = Colors.Text
             itemLabel.Position = UDim2.new(0, 8, 0, 0)
             itemLabel.Size = UDim2.new(1, -68, 1, 0)
@@ -1033,7 +1099,6 @@ function RaxorHub:Window(GuiConfig)
             itemLabel.ZIndex = 6004
             itemLabel.Parent = itemRow
 
-            -- Load button
             local loadBtn = Instance.new("TextButton")
             loadBtn.Size = UDim2.new(0, 36, 0, 20)
             loadBtn.Position = UDim2.new(1, -58, 0.5, -10)
@@ -1050,7 +1115,6 @@ function RaxorHub:Window(GuiConfig)
                 RaxorHub:LoadConfigData(cfgName)
             end)
 
-            -- Delete button
             local delBtn = Instance.new("ImageButton")
             delBtn.Size = UDim2.new(0, 18, 0, 18)
             delBtn.Position = UDim2.new(1, -20, 0.5, -9)
@@ -1080,7 +1144,6 @@ function RaxorHub:Window(GuiConfig)
 
     RefreshPresetsList()
 
-    -- Search filter for elements in active tab
     SearchInput:GetPropertyChangedSignal("Text"):Connect(function()
         local query = string.lower(SearchInput.Text)
         if RaxorHub.ActivePage then
@@ -1108,9 +1171,8 @@ function RaxorHub:Window(GuiConfig)
     function window:AddTab(TabConfig)
         local tab = {CountSection = 0}
 
-        -- Left Tab Button
         local TabBtn = Instance.new("TextButton")
-        TabBtn.Size = UDim2.new(1, 0, 0, 38)
+        TabBtn.Size = UDim2.new(1, 0, 0, 40)
         TabBtn.BackgroundColor3 = Colors.CardActive
         TabBtn.BackgroundTransparency = 1
         TabBtn.AutoButtonColor = false
@@ -1120,11 +1182,14 @@ function RaxorHub:Window(GuiConfig)
         TabBtn.Parent = SidebarScroll
         Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
-        -- Active Vertical Pill Indicator (Blade Purple Bar)
+        -- Glowing Tab Stroke
+        local tabStroke = AddStroke(TabBtn, Colors.Border, 1)
+        tabStroke.Transparency = 1
+
         local Indicator = Instance.new("Frame")
         Indicator.Name = "Indicator"
-        Indicator.Size = UDim2.new(0, 3, 0, 20)
-        Indicator.Position = UDim2.new(0, 0, 0.5, -10)
+        Indicator.Size = UDim2.new(0, 3, 0, 22)
+        Indicator.Position = UDim2.new(0, 0, 0.5, -11)
         Indicator.BackgroundColor3 = Colors.Accent
         Indicator.BackgroundTransparency = 1
         Indicator.BorderSizePixel = 0
@@ -1140,9 +1205,9 @@ function RaxorHub:Window(GuiConfig)
 
         local TabIcon = Instance.new("ImageLabel")
         TabIcon.Name = "Icon"
-        TabIcon.Size = UDim2.new(0, 18, 0, 18)
-        TabIcon.Position = UDim2.new(0, 12, 0.5, -9)
-        TabIcon.Image = TabConfig.Icon or Icons.Logo
+        TabIcon.Size = UDim2.new(0, 20, 0, 20)
+        TabIcon.Position = UDim2.new(0, 12, 0.5, -10)
+        TabIcon.Image = TabConfig.Icon or Icons.Sword
         TabIcon.ImageColor3 = Colors.SubText
         TabIcon.BackgroundTransparency = 1
         TabIcon.ZIndex = 24
@@ -1152,8 +1217,8 @@ function RaxorHub:Window(GuiConfig)
         TabLabel.Name = "Label"
         TabLabel.Text = TabConfig.Name
         TabLabel.Size = UDim2.new(1, -44, 1, 0)
-        TabLabel.Position = UDim2.new(0, 38, 0, 0)
-        TabLabel.Font = Enum.Font.GothamMedium
+        TabLabel.Position = UDim2.new(0, 40, 0, 0)
+        TabLabel.Font = Enum.Font.GothamBold
         TabLabel.TextSize = 13
         TabLabel.TextColor3 = Colors.SubText
         TabLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -1161,7 +1226,6 @@ function RaxorHub:Window(GuiConfig)
         TabLabel.ZIndex = 24
         TabLabel.Parent = TabContent
 
-        -- Page Scrolling Frame
         local Page = Instance.new("ScrollingFrame")
         Page.Name = TabConfig.Name .. "_Page"
         Page.Size = UDim2.new(1, 0, 1, 0)
@@ -1178,37 +1242,40 @@ function RaxorHub:Window(GuiConfig)
         Page.Parent = ContentContainer
 
         local PageLayout = Instance.new("UIListLayout")
-        PageLayout.Padding = UDim.new(0, 12)
+        PageLayout.Padding = UDim.new(0, 10)
         PageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
         PageLayout.Parent = Page
 
         local PagePadding = Instance.new("UIPadding", Page)
-        PagePadding.PaddingTop = UDim.new(0, 12)
-        PagePadding.PaddingLeft = UDim.new(0, 14)
-        PagePadding.PaddingRight = UDim.new(0, 16)
-        PagePadding.PaddingBottom = UDim.new(0, 16)
+        PagePadding.PaddingTop = UDim.new(0, 10)
+        PagePadding.PaddingLeft = UDim.new(0, 12)
+        PagePadding.PaddingRight = UDim.new(0, 14)
+        PagePadding.PaddingBottom = UDim.new(0, 14)
 
         local function UpdateTabVisuals()
             for _, b in pairs(SidebarScroll:GetChildren()) do
                 if b:IsA("TextButton") then
                     b.BackgroundTransparency = 1
+                    local s = b:FindFirstChildOfClass("UIStroke")
+                    if s then s.Transparency = 1 end
                     if b:FindFirstChild("Indicator") then
                         b.Indicator.BackgroundTransparency = 1
                     end
                     if b:FindFirstChild("Frame") then
                         b.Frame.Label.TextColor3 = Colors.SubText
-                        b.Frame.Label.Font = Enum.Font.GothamMedium
                         b.Frame.Icon.ImageColor3 = Colors.SubText
                     end
                 end
             end
             TabBtn.BackgroundTransparency = 0
+            tabStroke.Transparency = 0
+            tabStroke.Color = Colors.BorderFocus
             Indicator.BackgroundTransparency = 0
             TabLabel.TextColor3 = Colors.White
-            TabLabel.Font = Enum.Font.GothamBold
             TabIcon.ImageColor3 = Colors.Accent
             CurrentBreadcrumb.Text = TabConfig.Name
+            BreadcrumbIcon.Image = TabConfig.Icon or Icons.Sword
             RaxorHub.ActivePage = Page
         end
 
@@ -1268,14 +1335,14 @@ function RaxorHub:Window(GuiConfig)
             end
 
             local hasDesc = Description and Description ~= ""
-            local xPos = IconID and 34 or 12
+            local xPos = IconID and 36 or 14
 
             local HeaderTitle = Instance.new("TextLabel")
-            HeaderTitle.Size = UDim2.new(1, -45, 0, 16)
-            HeaderTitle.Position = hasDesc and UDim2.new(0, xPos, 0, 4) or UDim2.new(0, xPos, 0.5, -8)
+            HeaderTitle.Size = UDim2.new(1, -45, 0, 18)
+            HeaderTitle.Position = hasDesc and UDim2.new(0, xPos, 0, 4) or UDim2.new(0, xPos, 0.5, -9)
             HeaderTitle.Text = Title
             HeaderTitle.Font = Enum.Font.GothamBold
-            HeaderTitle.TextSize = 13
+            HeaderTitle.TextSize = 14
             HeaderTitle.TextColor3 = Colors.Text
             HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
             HeaderTitle.BackgroundTransparency = 1
@@ -1284,11 +1351,11 @@ function RaxorHub:Window(GuiConfig)
 
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
-                Desc.Size = UDim2.new(1, -45, 0, 14)
-                Desc.Position = UDim2.new(0, xPos, 0, 19)
+                Desc.Size = UDim2.new(1, -45, 0, 16)
+                Desc.Position = UDim2.new(0, xPos, 0, 20)
                 Desc.Text = Description
-                Desc.Font = Enum.Font.Gotham
-                Desc.TextSize = 11
+                Desc.Font = Enum.Font.GothamMedium
+                Desc.TextSize = 12
                 Desc.TextColor3 = Colors.SubText
                 Desc.TextXAlignment = Enum.TextXAlignment.Left
                 Desc.BackgroundTransparency = 1
@@ -1300,15 +1367,16 @@ function RaxorHub:Window(GuiConfig)
                 SectionFrame.Size = UDim2.new(1, 0, 0, SectionLayout.AbsoluteContentSize.Y + 4)
             end)
 
+            -- [[ Row Text Setup with High Thai Legibility ]]
             local function SetupRowText(row, title, desc, rightSpace)
                 local hasRowDesc = desc and desc ~= ""
                 local TTitle = Instance.new("TextLabel")
                 TTitle.Name = "TTitle"
                 TTitle.Text = title or ""
-                TTitle.Size = UDim2.new(1, -rightSpace, 0, 18)
-                TTitle.Position = hasRowDesc and UDim2.new(0, 14, 0, 8) or UDim2.new(0, 14, 0.5, -9)
+                TTitle.Size = UDim2.new(1, -rightSpace, 0, 20)
+                TTitle.Position = hasRowDesc and UDim2.new(0, 14, 0, 10) or UDim2.new(0, 14, 0.5, -10)
                 TTitle.Font = Enum.Font.GothamBold
-                TTitle.TextSize = 13
+                TTitle.TextSize = 14
                 TTitle.TextColor3 = Colors.Text
                 TTitle.TextXAlignment = Enum.TextXAlignment.Left
                 TTitle.BackgroundTransparency = 1
@@ -1319,10 +1387,10 @@ function RaxorHub:Window(GuiConfig)
                     local TDesc = Instance.new("TextLabel")
                     TDesc.Name = "TDesc"
                     TDesc.Text = desc
-                    TDesc.Size = UDim2.new(1, -rightSpace, 0, 14)
-                    TDesc.Position = UDim2.new(0, 14, 0, 27)
-                    TDesc.Font = Enum.Font.Gotham
-                    TDesc.TextSize = 11
+                    TDesc.Size = UDim2.new(1, -rightSpace, 0, 18)
+                    TDesc.Position = UDim2.new(0, 14, 0, 32)
+                    TDesc.Font = Enum.Font.GothamMedium
+                    TDesc.TextSize = 12
                     TDesc.TextColor3 = Colors.SubText
                     TDesc.TextXAlignment = Enum.TextXAlignment.Left
                     TDesc.BackgroundTransparency = 1
@@ -1331,7 +1399,7 @@ function RaxorHub:Window(GuiConfig)
                 end
             end
 
-            -- [[ Toggle Switch (Blade Modern Switch) ]]
+            -- [[ Toggle Switch ]]
             function sectionItems:AddToggleSwitch(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -1344,8 +1412,8 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 80)
 
                 local SwitchBg = Instance.new("TextButton")
-                SwitchBg.Size = UDim2.new(0, 44, 0, 22)
-                SwitchBg.Position = UDim2.new(1, -56, 0.5, -11)
+                SwitchBg.Size = UDim2.new(0, 46, 0, 24)
+                SwitchBg.Position = UDim2.new(1, -58, 0.5, -12)
                 SwitchBg.BackgroundColor3 = Config.Default and Colors.SwitchOn or Colors.SwitchOff
                 SwitchBg.AutoButtonColor = false
                 SwitchBg.Text = ""
@@ -1355,8 +1423,8 @@ function RaxorHub:Window(GuiConfig)
                 AddStroke(SwitchBg, Colors.Border, 1)
 
                 local Knob = Instance.new("Frame")
-                Knob.Size = UDim2.new(0, 16, 0, 16)
-                Knob.Position = Config.Default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+                Knob.Size = UDim2.new(0, 18, 0, 18)
+                Knob.Position = Config.Default and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
                 Knob.BackgroundColor3 = Colors.White
                 Knob.ZIndex = 32
                 Knob.Parent = SwitchBg
@@ -1366,7 +1434,7 @@ function RaxorHub:Window(GuiConfig)
                 UpdateState(Config.ID, state)
 
                 local function VisualUpdate(val)
-                    local targetPos = val and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+                    local targetPos = val and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
                     local targetColor = val and Colors.SwitchOn or Colors.SwitchOff
                     Tween(Knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos})
                     Tween(SwitchBg, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor})
@@ -1393,7 +1461,7 @@ function RaxorHub:Window(GuiConfig)
                 end)
             end
 
-            -- [[ Slider Control (Blade Dual/Single Modern Slider) ]]
+            -- [[ Slider Control ]]
             function sectionItems:AddSlider(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -1406,8 +1474,8 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 180)
 
                 local SliderContainer = Instance.new("Frame")
-                SliderContainer.Size = UDim2.new(0, 160, 0, 36)
-                SliderContainer.Position = UDim2.new(1, -172, 0.5, -18)
+                SliderContainer.Size = UDim2.new(0, 160, 0, 38)
+                SliderContainer.Position = UDim2.new(1, -172, 0.5, -19)
                 SliderContainer.BackgroundTransparency = 1
                 SliderContainer.ZIndex = 30
                 SliderContainer.Parent = Row
@@ -1420,7 +1488,7 @@ function RaxorHub:Window(GuiConfig)
                 ValueLabel.Text = tostring(Config.Default or Config.Min) .. suffix
                 ValueLabel.TextColor3 = Colors.Text
                 ValueLabel.Font = Enum.Font.GothamBold
-                ValueLabel.TextSize = 12
+                ValueLabel.TextSize = 13
                 ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
                 ValueLabel.ZIndex = 31
                 ValueLabel.Parent = SliderContainer
@@ -1516,7 +1584,7 @@ function RaxorHub:Window(GuiConfig)
                 end)
             end
 
-            -- [[ Dropdown Control (Blade Single Select) ]]
+            -- [[ Dropdown Control ]]
             function sectionItems:AddDropdown(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -1529,8 +1597,8 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 200)
 
                 local Frame = Instance.new("Frame")
-                Frame.Size = UDim2.new(0, 175, 0, 32)
-                Frame.Position = UDim2.new(1, -188, 0.5, -16)
+                Frame.Size = UDim2.new(0, 175, 0, 34)
+                Frame.Position = UDim2.new(1, -188, 0.5, -17)
                 Frame.BackgroundColor3 = Colors.InputBg
                 Frame.ZIndex = 30
                 Frame.Parent = Row
@@ -1584,9 +1652,9 @@ function RaxorHub:Window(GuiConfig)
                 SearchBox.PlaceholderText = "Search..."
                 SearchBox.PlaceholderColor3 = Colors.MutedText
                 SearchBox.TextColor3 = Colors.Text
-                SearchBox.Font = Enum.Font.Gotham
+                SearchBox.Font = Enum.Font.GothamMedium
                 SearchBox.Text = ""
-                SearchBox.TextSize = 11
+                SearchBox.TextSize = 12
                 SearchBox.ZIndex = 7001
                 SearchBox.Parent = List
                 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 4)
@@ -1629,12 +1697,12 @@ function RaxorHub:Window(GuiConfig)
                         if filter == "" or string.find(string.lower(tostring(item)), string.lower(tostring(filter))) then
                             local isSelected = (item == currentlySelected)
                             local itemBtn = Instance.new("TextButton")
-                            itemBtn.Size = UDim2.new(1, -4, 0, 26)
+                            itemBtn.Size = UDim2.new(1, -4, 0, 28)
                             itemBtn.BorderSizePixel = 0
                             itemBtn.AutoButtonColor = false
                             itemBtn.Text = "  " .. tostring(item)
-                            itemBtn.Font = isSelected and Enum.Font.GothamBold or Enum.Font.Gotham
-                            itemBtn.TextSize = 11
+                            itemBtn.Font = isSelected and Enum.Font.GothamBold or Enum.Font.GothamMedium
+                            itemBtn.TextSize = 12
                             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
                             itemBtn.ZIndex = 7002
                             itemBtn.BackgroundColor3 = isSelected and Colors.Accent or Colors.CardBg
@@ -1709,7 +1777,7 @@ function RaxorHub:Window(GuiConfig)
                 return dropdownFunc
             end
 
-            -- [[ Multi-Select Control (Blade Multi-Option Dropdown Image 3) ]]
+            -- [[ Multi-Select Control ]]
             function sectionItems:AddMultiSelect(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -1722,8 +1790,8 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 200)
 
                 local Frame = Instance.new("Frame")
-                Frame.Size = UDim2.new(0, 175, 0, 32)
-                Frame.Position = UDim2.new(1, -188, 0.5, -16)
+                Frame.Size = UDim2.new(0, 175, 0, 34)
+                Frame.Position = UDim2.new(1, -188, 0.5, -17)
                 Frame.BackgroundColor3 = Colors.InputBg
                 Frame.ZIndex = 30
                 Frame.Parent = Row
@@ -1777,9 +1845,9 @@ function RaxorHub:Window(GuiConfig)
                 SearchBox.PlaceholderText = "Search..."
                 SearchBox.PlaceholderColor3 = Colors.MutedText
                 SearchBox.TextColor3 = Colors.Text
-                SearchBox.Font = Enum.Font.Gotham
+                SearchBox.Font = Enum.Font.GothamMedium
                 SearchBox.Text = ""
-                SearchBox.TextSize = 11
+                SearchBox.TextSize = 12
                 SearchBox.ZIndex = 7001
                 SearchBox.Parent = List
                 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 4)
@@ -1837,7 +1905,7 @@ function RaxorHub:Window(GuiConfig)
                         if filter == "" or string.find(string.lower(tostring(item)), string.lower(tostring(filter))) then
                             local isSelected = (type(selectedItems) == "table" and table.find(selectedItems, item))
                             local itemBtn = Instance.new("TextButton")
-                            itemBtn.Size = UDim2.new(1, -4, 0, 26)
+                            itemBtn.Size = UDim2.new(1, -4, 0, 28)
                             itemBtn.BorderSizePixel = 0
                             itemBtn.AutoButtonColor = false
                             itemBtn.Text = ""
@@ -1860,8 +1928,8 @@ function RaxorHub:Window(GuiConfig)
                             tText.Size = UDim2.new(1, -28, 1, 0)
                             tText.Position = UDim2.new(0, 26, 0, 0)
                             tText.Text = tostring(item)
-                            tText.Font = isSelected and Enum.Font.GothamBold or Enum.Font.Gotham
-                            tText.TextSize = 11
+                            tText.Font = isSelected and Enum.Font.GothamBold or Enum.Font.GothamMedium
+                            tText.TextSize = 12
                             tText.TextColor3 = isSelected and Colors.White or Colors.Text
                             tText.TextXAlignment = Enum.TextXAlignment.Left
                             tText.BackgroundTransparency = 1
@@ -1875,7 +1943,7 @@ function RaxorHub:Window(GuiConfig)
                                     table.remove(selectedItems, foundIndex)
                                     checkIcon.Visible = false
                                     tText.TextColor3 = Colors.Text
-                                    tText.Font = Enum.Font.Gotham
+                                    tText.Font = Enum.Font.GothamMedium
                                     itemBtn.BackgroundColor3 = Colors.CardBg
                                 else
                                     table.insert(selectedItems, item)
@@ -1932,7 +2000,7 @@ function RaxorHub:Window(GuiConfig)
                 end)
             end
 
-            -- [[ Color Picker Control (Blade Modern HSV Color Picker Image 9) ]]
+            -- [[ Color Picker Control ]]
             function sectionItems:AddColorPicker(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -1948,19 +2016,18 @@ function RaxorHub:Window(GuiConfig)
                 UpdateState(Config.ID, currentColor)
 
                 local ColorBox = Instance.new("TextButton")
-                ColorBox.Size = UDim2.new(0, 36, 0, 22)
-                ColorBox.Position = UDim2.new(1, -48, 0.5, -11)
+                ColorBox.Size = UDim2.new(0, 38, 0, 24)
+                ColorBox.Position = UDim2.new(1, -50, 0.5, -12)
                 ColorBox.BackgroundColor3 = currentColor
                 ColorBox.Text = ""
                 ColorBox.AutoButtonColor = false
                 ColorBox.ZIndex = 30
                 ColorBox.Parent = Row
-                Instance.new("UICorner", ColorBox).CornerRadius = UDim.new(0, 5)
-                AddStroke(ColorBox, Colors.BorderFocus, 1)
+                Instance.new("UICorner", ColorBox).CornerRadius = UDim.new(0, 6)
+                AddStroke(ColorBox, Colors.BorderFocus, 1.2)
 
-                -- Modal popup for HSV Palette
                 local PickerModal = Instance.new("Frame")
-                PickerModal.Size = UDim2.new(0, 180, 0, 200)
+                PickerModal.Size = UDim2.new(0, 190, 0, 210)
                 PickerModal.BackgroundColor3 = Colors.ModalBg
                 PickerModal.Visible = false
                 PickerModal.ZIndex = 7500
@@ -1972,19 +2039,18 @@ function RaxorHub:Window(GuiConfig)
                 local PickerTitle = Instance.new("TextLabel")
                 PickerTitle.Text = Config.Title or "Color Picker"
                 PickerTitle.Font = Enum.Font.GothamBold
-                PickerTitle.TextSize = 11
+                PickerTitle.TextSize = 12
                 PickerTitle.TextColor3 = Colors.Text
-                PickerTitle.Size = UDim2.new(1, -16, 0, 22)
-                PickerTitle.Position = UDim2.new(0, 8, 0, 4)
+                PickerTitle.Size = UDim2.new(1, -16, 0, 24)
+                PickerTitle.Position = UDim2.new(0, 8, 0, 6)
                 PickerTitle.TextXAlignment = Enum.TextXAlignment.Left
                 PickerTitle.BackgroundTransparency = 1
                 PickerTitle.ZIndex = 7501
                 PickerTitle.Parent = PickerModal
 
-                -- Preset Dots Palette (Matching Image 9)
                 local PaletteRow = Instance.new("Frame")
                 PaletteRow.Size = UDim2.new(1, -16, 0, 24)
-                PaletteRow.Position = UDim2.new(0, 8, 1, -30)
+                PaletteRow.Position = UDim2.new(0, 8, 1, -32)
                 PaletteRow.BackgroundTransparency = 1
                 PaletteRow.ZIndex = 7501
                 PaletteRow.Parent = PickerModal
@@ -1995,8 +2061,8 @@ function RaxorHub:Window(GuiConfig)
                 PaletteLayout.Padding = UDim.new(0, 6)
 
                 local presets = {
-                    Color3.fromRGB(124, 92, 252), -- Blade Purple
-                    Color3.fromRGB(80, 150, 255), -- Sky Blue
+                    Color3.fromRGB(0, 162, 255),  -- Electric Cyan
+                    Color3.fromRGB(124, 92, 252), -- Purple
                     Color3.fromRGB(60, 220, 140), -- Green
                     Color3.fromRGB(255, 190, 40),  -- Amber
                     Color3.fromRGB(245, 70, 80),   -- Red
@@ -2021,13 +2087,12 @@ function RaxorHub:Window(GuiConfig)
                     end)
                 end
 
-                -- Hex Code Display
                 local HexLabel = Instance.new("TextLabel")
-                HexLabel.Size = UDim2.new(1, -16, 0, 20)
-                HexLabel.Position = UDim2.new(0, 8, 0, 136)
+                HexLabel.Size = UDim2.new(1, -16, 0, 22)
+                HexLabel.Position = UDim2.new(0, 8, 0, 140)
                 HexLabel.Text = "#" .. currentColor:ToHex()
                 HexLabel.Font = Enum.Font.Code
-                HexLabel.TextSize = 11
+                HexLabel.TextSize = 12
                 HexLabel.TextColor3 = Colors.SubText
                 HexLabel.BackgroundTransparency = 1
                 HexLabel.ZIndex = 7501
@@ -2043,7 +2108,7 @@ function RaxorHub:Window(GuiConfig)
                         activeColorPicker = PickerModal
                         local absPos = ColorBox.AbsolutePosition
                         local mainAbsPos = MainFrame.AbsolutePosition
-                        PickerModal.Position = UDim2.new(0, absPos.X - mainAbsPos.X - 140, 0, absPos.Y - mainAbsPos.Y + 26)
+                        PickerModal.Position = UDim2.new(0, absPos.X - mainAbsPos.X - 150, 0, absPos.Y - mainAbsPos.Y + 28)
                     end
                 end)
 
@@ -2061,7 +2126,7 @@ function RaxorHub:Window(GuiConfig)
                 end
             end
 
-            -- [[ Input Box (Blade Text Field) ]]
+            -- [[ Input Box ]]
             function sectionItems:AddInput(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -2074,8 +2139,8 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 175)
 
                 local InputFrame = Instance.new("Frame")
-                InputFrame.Size = UDim2.new(0, 150, 0, 32)
-                InputFrame.Position = UDim2.new(1, -164, 0.5, -16)
+                InputFrame.Size = UDim2.new(0, 150, 0, 34)
+                InputFrame.Position = UDim2.new(1, -164, 0.5, -17)
                 InputFrame.BackgroundColor3 = Colors.InputBg
                 InputFrame.ClipsDescendants = true
                 InputFrame.ZIndex = 30
@@ -2092,7 +2157,7 @@ function RaxorHub:Window(GuiConfig)
                 TextBox.PlaceholderColor3 = Colors.MutedText
                 TextBox.TextColor3 = Colors.Text
                 TextBox.TextSize = 12
-                TextBox.Font = Enum.Font.Gotham
+                TextBox.Font = Enum.Font.GothamMedium
                 TextBox.TextXAlignment = Enum.TextXAlignment.Left
                 TextBox.ClearTextOnFocus = false
                 TextBox.ZIndex = 31
@@ -2128,7 +2193,7 @@ function RaxorHub:Window(GuiConfig)
                 return Row
             end
 
-            -- [[ Button Control (Blade Sleek Clickable) ]]
+            -- [[ Button Control ]]
             function sectionItems:AddButton(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -2142,8 +2207,8 @@ function RaxorHub:Window(GuiConfig)
 
                 local Button = Instance.new("TextButton")
                 Button.Name = "RaxorButton"
-                Button.Size = UDim2.new(0, 110, 0, 30)
-                Button.Position = UDim2.new(1, -124, 0.5, -15)
+                Button.Size = UDim2.new(0, 110, 0, 32)
+                Button.Position = UDim2.new(1, -124, 0.5, -16)
                 Button.BackgroundColor3 = Colors.ButtonBg
                 Button.AutoButtonColor = false
                 Button.Text = Config.ButtonText or "Execute"
@@ -2181,7 +2246,7 @@ function RaxorHub:Window(GuiConfig)
             -- [[ Label / Divider Banner ]]
             function sectionItems:AddLabel(Title)
                 local Row = Instance.new("Frame")
-                Row.Size = UDim2.new(1, -4, 0, 34)
+                Row.Size = UDim2.new(1, -4, 0, 36)
                 Row.BackgroundColor3 = Colors.SectionHeaderBg
                 Row.BorderSizePixel = 0
                 Row.ZIndex = 28
@@ -2204,7 +2269,7 @@ function RaxorHub:Window(GuiConfig)
                 TTitle.Size = UDim2.new(1, -26, 1, 0)
                 TTitle.Position = UDim2.new(0, 18, 0, 0)
                 TTitle.Font = Enum.Font.GothamBold
-                TTitle.TextSize = 12
+                TTitle.TextSize = 13
                 TTitle.TextColor3 = Colors.Text
                 TTitle.TextXAlignment = Enum.TextXAlignment.Left
                 TTitle.TextWrapped = true
@@ -2223,7 +2288,7 @@ function RaxorHub:Window(GuiConfig)
                 return labelFunc
             end
 
-            -- [[ Keybind Control (Blade Keybind Modal Image 6) ]]
+            -- [[ Keybind Control ]]
             function sectionItems:AddKeybind(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -2239,8 +2304,8 @@ function RaxorHub:Window(GuiConfig)
                 local keyConnection
 
                 local BindButton = Instance.new("TextButton")
-                BindButton.Size = UDim2.new(0, 90, 0, 28)
-                BindButton.Position = UDim2.new(1, -104, 0.5, -14)
+                BindButton.Size = UDim2.new(0, 90, 0, 30)
+                BindButton.Position = UDim2.new(1, -104, 0.5, -15)
                 BindButton.BackgroundColor3 = Colors.ButtonBg
                 BindButton.AutoButtonColor = false
                 BindButton.Text = currentKey and "[" .. currentKey.Name .. "]" or "[ ... ]"
@@ -2326,7 +2391,6 @@ function RaxorHub:Window(GuiConfig)
         return tab
     end
 
-    -- Close dropdowns on canvas click
     ContentContainer.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             CloseAllDropdowns()
