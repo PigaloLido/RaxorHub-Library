@@ -196,7 +196,7 @@ local Icons = {
     Search      = "rbxassetid://6031154871",      -- Search Glass
     ChevronDown = "rbxassetid://6034818372",      -- Chevron
     Checkmark   = "rbxassetid://6031094667",      -- Checkmark
-    Trash       = "rbxassetid://6031079143",      -- Trash
+    Trash       = "rbxassetid://93749431604052",  -- Trash
     Plus        = "rbxassetid://6031094678",      -- Plus
     Star        = "rbxassetid://6031068426",      -- Star / Autoload
     Refresh     = "rbxassetid://6031097225"       -- Refresh / Sync
@@ -711,6 +711,79 @@ function RaxorHub:Window(GuiConfig)
         ScreenGui.Parent = PlayerGui
     end
 
+    -- [[ Tooltip System for PC Hover (Blade Aesthetic) ]]
+    local TooltipFrame = Instance.new("Frame")
+    TooltipFrame.Name = "RaxorTooltip"
+    TooltipFrame.Size = UDim2.new(0, 100, 0, 26)
+    TooltipFrame.BackgroundColor3 = Color3.fromRGB(24, 25, 34)
+    TooltipFrame.BorderSizePixel = 0
+    TooltipFrame.Visible = false
+    TooltipFrame.ZIndex = 99999
+    TooltipFrame.Parent = ScreenGui
+    Instance.new("UICorner", TooltipFrame).CornerRadius = UDim.new(0, 6)
+    AddStroke(TooltipFrame, Colors.Accent, 1)
+
+    local TooltipLabel = Instance.new("TextLabel")
+    TooltipLabel.Name = "Text"
+    TooltipLabel.Size = UDim2.new(1, -16, 1, 0)
+    TooltipLabel.Position = UDim2.new(0, 8, 0, 0)
+    TooltipLabel.BackgroundTransparency = 1
+    TooltipLabel.Font = Fonts.Medium
+    TooltipLabel.TextSize = 11
+    TooltipLabel.TextColor3 = Colors.Text
+    TooltipLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TooltipLabel.ZIndex = 100000
+    TooltipLabel.Parent = TooltipFrame
+
+    local tooltipConn = nil
+    local function ShowTooltip(text)
+        if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then return end
+        TooltipLabel.Text = text
+        local TextService = game:GetService("TextService")
+        local sz = TextService:GetTextSize(text, 11, Fonts.Medium, Vector2.new(500, 50))
+        TooltipFrame.Size = UDim2.new(0, sz.X + 18, 0, 26)
+        local function updatePos()
+            local mousePos = UserInputService:GetMouseLocation()
+            local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
+            local tw = TooltipFrame.AbsoluteSize.X
+            local posX = mousePos.X + 14
+            if posX + tw > vp.X - 8 then
+                posX = mousePos.X - tw - 14
+            end
+            local posY = mousePos.Y - 30
+            if posY < 8 then
+                posY = mousePos.Y + 22
+            end
+            TooltipFrame.Position = UDim2.new(0, posX, 0, posY)
+        end
+        updatePos()
+        TooltipFrame.Visible = true
+        if tooltipConn then tooltipConn:Disconnect() end
+        tooltipConn = UserInputService.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                updatePos()
+            end
+        end)
+    end
+
+    local function HideTooltip()
+        TooltipFrame.Visible = false
+        if tooltipConn then
+            tooltipConn:Disconnect()
+            tooltipConn = nil
+        end
+    end
+
+    local function AttachTooltip(guiObject, tooltipText)
+        if not guiObject then return end
+        guiObject.MouseEnter:Connect(function()
+            ShowTooltip(tooltipText)
+        end)
+        guiObject.MouseLeave:Connect(function()
+            HideTooltip()
+        end)
+    end
+
     -- Responsive default size for Mobile & PC
     local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
     local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
@@ -808,32 +881,45 @@ function RaxorHub:Window(GuiConfig)
         ToggleUI()
     end)
 
-    -- [[ Resizer Corner (PC) ]]
+    -- [[ Resizer Corner (PC / Touch - Rounded Accent Corner) ]]
     local ResizeHandle = Instance.new("Frame")
     ResizeHandle.Name = "ResizeHandle"
-    ResizeHandle.Size = UDim2.new(0, 18, 0, 18)
-    ResizeHandle.Position = UDim2.new(1, -18, 1, -18)
+    ResizeHandle.Size = UDim2.new(0, 24, 0, 24)
+    ResizeHandle.Position = UDim2.new(1, -24, 1, -24)
     ResizeHandle.BackgroundTransparency = 1
     ResizeHandle.ZIndex = 5000
     ResizeHandle.Parent = MainFrame
 
-    local ResizeLine1 = Instance.new("Frame")
-    ResizeLine1.Size = UDim2.new(0, 8, 0, 2)
-    ResizeLine1.Position = UDim2.new(1, -10, 1, -5)
-    ResizeLine1.Rotation = -45
-    ResizeLine1.BackgroundColor3 = Colors.MutedText
-    ResizeLine1.BorderSizePixel = 0
-    ResizeLine1.ZIndex = 4999
-    ResizeLine1.Parent = ResizeHandle
+    local ResizeGrip = Instance.new("Frame")
+    ResizeGrip.Name = "ResizeGrip"
+    ResizeGrip.Size = UDim2.new(0, 13, 0, 13)
+    ResizeGrip.Position = UDim2.new(1, -15, 1, -15)
+    ResizeGrip.BackgroundColor3 = Colors.Accent
+    ResizeGrip.BackgroundTransparency = 0.25
+    ResizeGrip.BorderSizePixel = 0
+    ResizeGrip.ZIndex = 5001
+    ResizeGrip.Parent = ResizeHandle
+    Instance.new("UICorner", ResizeGrip).CornerRadius = UDim.new(0, 6)
+    AddStroke(ResizeGrip, Colors.AccentHover, 1)
 
-    local ResizeLine2 = Instance.new("Frame")
-    ResizeLine2.Size = UDim2.new(0, 5, 0, 2)
-    ResizeLine2.Position = UDim2.new(1, -7, 1, -5)
-    ResizeLine2.Rotation = -45
-    ResizeLine2.BackgroundColor3 = Colors.MutedText
-    ResizeLine2.BorderSizePixel = 0
-    ResizeLine2.ZIndex = 4999
-    ResizeLine2.Parent = ResizeHandle
+    ResizeHandle.MouseEnter:Connect(function()
+        Tween(ResizeGrip, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0,
+            BackgroundColor3 = Colors.AccentHover,
+            Size = UDim2.new(0, 15, 0, 15),
+            Position = UDim2.new(1, -17, 1, -17)
+        })
+    end)
+    ResizeHandle.MouseLeave:Connect(function()
+        Tween(ResizeGrip, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.25,
+            BackgroundColor3 = Colors.Accent,
+            Size = UDim2.new(0, 13, 0, 13),
+            Position = UDim2.new(1, -15, 1, -15)
+        })
+    end)
+
+    AttachTooltip(ResizeHandle, "ลากเพื่อปรับขนาดหน้าต่าง (Drag to Resize)")
 
     MakeResizable(MainFrame, ResizeHandle)
 
@@ -1026,29 +1112,33 @@ function RaxorHub:Window(GuiConfig)
     end
 
     -- Folder Button -> Opens Presets Modal (Icon 12)
-    CreateTopIconBtn("FolderBtn", Icons.Folder, Colors.ControlBtn, Colors.ButtonHover, 1, function()
+    local folderBtn = CreateTopIconBtn("FolderBtn", Icons.Folder, Colors.ControlBtn, Colors.ButtonHover, 1, function()
         if PresetsModal then
             PresetsModal.Visible = not PresetsModal.Visible
         end
     end)
+    AttachTooltip(folderBtn, "การตั้งค่า Presets (Config Hub)")
 
     -- Minimize Button (Icon 9)
-    CreateTopIconBtn("MinBtn", Icons.Minimize, Colors.ControlBtn, Colors.ButtonHover, 2, function()
+    local minBtn = CreateTopIconBtn("MinBtn", Icons.Minimize, Colors.ControlBtn, Colors.ButtonHover, 2, function()
         ToggleUI()
     end)
+    AttachTooltip(minBtn, "ย่อ / ซ่อนหน้าต่าง UI (Minimize)")
 
     -- Restore / Center Button (Icon 10)
-    CreateTopIconBtn("ResBtn", Icons.Restore, Colors.ControlBtn, Colors.ButtonHover, 3, function()
+    local resBtn = CreateTopIconBtn("ResBtn", Icons.Restore, Colors.ControlBtn, Colors.ButtonHover, 3, function()
         local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
         MainFrame.Position = UDim2.new(0.5, -MainFrame.AbsoluteSize.X / 2, 0.5, -MainFrame.AbsoluteSize.Y / 2)
     end)
+    AttachTooltip(resBtn, "จัดกึ่งกลางหน้าจอ (Center Window)")
 
     -- Close Button (Icon 11)
-    CreateTopIconBtn("CloseBtn", Icons.Close, Colors.ControlBtn, Colors.CloseRed, 4, function()
+    local closeBtn = CreateTopIconBtn("CloseBtn", Icons.Close, Colors.ControlBtn, Colors.CloseRed, 4, function()
         RaxorHub:ResetAllSettings()
         task.wait(0.1)
         ScreenGui:Destroy()
     end)
+    AttachTooltip(closeBtn, "ปิดโปรแกรม (Close RaxorHub)")
 
     -- Search Element Box (Left-aligned, flexible width, NEVER overlaps with controls!)
     local SearchContainer = Instance.new("Frame")
@@ -1105,28 +1195,28 @@ function RaxorHub:Window(GuiConfig)
     ContentContainer.ZIndex = 25
     ContentContainer.Parent = MainFrame
 
-    -- [[ Presets Modal Popup (Complete Configuration Hub) ]]
+    -- [[ Presets Modal Popup (Complete Configuration Hub - Mobile & PC Optimized) ]]
     PresetsModal = Instance.new("Frame")
     PresetsModal.Name = "PresetsModal"
-    PresetsModal.Size = UDim2.new(0, 270, 0, 340)
-    PresetsModal.Position = UDim2.new(1, -280, 0, 52)
+    PresetsModal.Size = UDim2.new(0, 320, 1, -58)
+    PresetsModal.Position = UDim2.new(1, -330, 0, 50)
     PresetsModal.BackgroundColor3 = Colors.ModalBg
     PresetsModal.BorderSizePixel = 0
     PresetsModal.Visible = false
     PresetsModal.ZIndex = 6000
     PresetsModal.Parent = MainFrame
-    Instance.new("UICorner", PresetsModal).CornerRadius = UDim.new(0, 8)
-    AddStroke(PresetsModal, Colors.BorderFocus, 1)
+    Instance.new("UICorner", PresetsModal).CornerRadius = UDim.new(0, 10)
+    AddStroke(PresetsModal, Colors.BorderFocus, 1.2)
 
     local PresetsHeader = Instance.new("Frame")
-    PresetsHeader.Size = UDim2.new(1, 0, 0, 36)
+    PresetsHeader.Size = UDim2.new(1, 0, 0, 42)
     PresetsHeader.BackgroundTransparency = 1
     PresetsHeader.ZIndex = 6001
     PresetsHeader.Parent = PresetsModal
 
     local PresetsIcon = Instance.new("ImageLabel")
-    PresetsIcon.Size = UDim2.new(0, 16, 0, 16)
-    PresetsIcon.Position = UDim2.new(0, 10, 0.5, -8)
+    PresetsIcon.Size = UDim2.new(0, 18, 0, 18)
+    PresetsIcon.Position = UDim2.new(0, 12, 0.5, -9)
     PresetsIcon.Image = Icons.Folder
     PresetsIcon.ImageColor3 = Colors.Accent
     PresetsIcon.BackgroundTransparency = 1
@@ -1134,87 +1224,106 @@ function RaxorHub:Window(GuiConfig)
     PresetsIcon.Parent = PresetsHeader
 
     local PresetsTitle = Instance.new("TextLabel")
-    PresetsTitle.Text = "Presets"
+    PresetsTitle.Text = "Presets Configuration"
     PresetsTitle.Font = Fonts.Title
     PresetsTitle.TextSize = 13
     PresetsTitle.TextColor3 = Colors.Text
-    PresetsTitle.Position = UDim2.new(0, 32, 0.5, -8)
-    PresetsTitle.Size = UDim2.new(0, 80, 0, 16)
+    PresetsTitle.Position = UDim2.new(0, 38, 0.5, -9)
+    PresetsTitle.Size = UDim2.new(1, -78, 0, 18)
     PresetsTitle.TextXAlignment = Enum.TextXAlignment.Left
     PresetsTitle.BackgroundTransparency = 1
     PresetsTitle.ZIndex = 6002
     PresetsTitle.Parent = PresetsHeader
 
     local PresetsCloseBtn = Instance.new("ImageButton")
-    PresetsCloseBtn.Size = UDim2.new(0, 16, 0, 16)
-    PresetsCloseBtn.Position = UDim2.new(1, -24, 0.5, -8)
-    PresetsCloseBtn.BackgroundTransparency = 1
+    PresetsCloseBtn.Size = UDim2.new(0, 26, 0, 26)
+    PresetsCloseBtn.Position = UDim2.new(1, -34, 0.5, -13)
+    PresetsCloseBtn.BackgroundColor3 = Colors.CardBg
+    PresetsCloseBtn.BackgroundTransparency = 0.5
     PresetsCloseBtn.Image = Icons.Close
     PresetsCloseBtn.ImageColor3 = Colors.SubText
+    PresetsCloseBtn.AutoButtonColor = false
     PresetsCloseBtn.ZIndex = 6002
     PresetsCloseBtn.Parent = PresetsHeader
+    Instance.new("UICorner", PresetsCloseBtn).CornerRadius = UDim.new(0, 6)
 
-    PresetsCloseBtn.MouseEnter:Connect(function() PresetsCloseBtn.ImageColor3 = Colors.CloseRed end)
-    PresetsCloseBtn.MouseLeave:Connect(function() PresetsCloseBtn.ImageColor3 = Colors.SubText end)
+    PresetsCloseBtn.MouseEnter:Connect(function()
+        PresetsCloseBtn.ImageColor3 = Colors.CloseRed
+        PresetsCloseBtn.BackgroundTransparency = 0
+    end)
+    PresetsCloseBtn.MouseLeave:Connect(function()
+        PresetsCloseBtn.ImageColor3 = Colors.SubText
+        PresetsCloseBtn.BackgroundTransparency = 0.5
+    end)
     PresetsCloseBtn.MouseButton1Click:Connect(function()
         PresetsModal.Visible = false
     end)
+    AttachTooltip(PresetsCloseBtn, "ปิดหน้าต่าง Presets (Close)")
 
-    -- New Config Input & Save Button
+    -- New Config Input & Save Button (Large touch target for Mobile)
     local ConfigInputFrame = Instance.new("Frame")
-    ConfigInputFrame.Size = UDim2.new(1, -16, 0, 28)
-    ConfigInputFrame.Position = UDim2.new(0, 8, 0, 38)
+    ConfigInputFrame.Size = UDim2.new(1, -20, 0, 36)
+    ConfigInputFrame.Position = UDim2.new(0, 10, 0, 44)
     ConfigInputFrame.BackgroundColor3 = Colors.InputBg
     ConfigInputFrame.ZIndex = 6002
     ConfigInputFrame.Parent = PresetsModal
-    Instance.new("UICorner", ConfigInputFrame).CornerRadius = UDim.new(0, 5)
+    Instance.new("UICorner", ConfigInputFrame).CornerRadius = UDim.new(0, 7)
     AddStroke(ConfigInputFrame, Colors.Border, 1)
 
     local ConfigNameInput = Instance.new("TextBox")
-    ConfigNameInput.Size = UDim2.new(1, -34, 1, 0)
-    ConfigNameInput.Position = UDim2.new(0, 8, 0, 0)
+    ConfigNameInput.Size = UDim2.new(1, -44, 1, 0)
+    ConfigNameInput.Position = UDim2.new(0, 12, 0, 0)
     ConfigNameInput.BackgroundTransparency = 1
     ConfigNameInput.Text = ""
     ConfigNameInput.PlaceholderText = "New config name..."
     ConfigNameInput.PlaceholderColor3 = Colors.MutedText
     ConfigNameInput.TextColor3 = Colors.Text
     ConfigNameInput.Font = Fonts.Regular
-    ConfigNameInput.TextSize = 11
+    ConfigNameInput.TextSize = 12
     ConfigNameInput.TextXAlignment = Enum.TextXAlignment.Left
     ConfigNameInput.ClearTextOnFocus = false
     ConfigNameInput.ZIndex = 6003
     ConfigNameInput.Parent = ConfigInputFrame
 
     local AddConfigBtn = Instance.new("ImageButton")
-    AddConfigBtn.Size = UDim2.new(0, 22, 0, 22)
-    AddConfigBtn.Position = UDim2.new(1, -25, 0.5, -11)
+    AddConfigBtn.Size = UDim2.new(0, 28, 0, 28)
+    AddConfigBtn.Position = UDim2.new(1, -32, 0.5, -14)
     AddConfigBtn.BackgroundColor3 = Colors.Accent
     AddConfigBtn.Image = Icons.Save
     AddConfigBtn.ImageColor3 = Colors.White
+    AddConfigBtn.AutoButtonColor = false
     AddConfigBtn.ZIndex = 6003
     AddConfigBtn.Parent = ConfigInputFrame
-    Instance.new("UICorner", AddConfigBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", AddConfigBtn).CornerRadius = UDim.new(0, 6)
+
+    AddConfigBtn.MouseEnter:Connect(function()
+        Tween(AddConfigBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.AccentHover})
+    end)
+    AddConfigBtn.MouseLeave:Connect(function()
+        Tween(AddConfigBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.Accent})
+    end)
+    AttachTooltip(AddConfigBtn, "บันทึก Preset ใหม่ (Save Config)")
 
     -- Configs Scrolling List
     local PresetsScroll = Instance.new("ScrollingFrame")
-    PresetsScroll.Size = UDim2.new(1, -16, 1, -116)
-    PresetsScroll.Position = UDim2.new(0, 8, 0, 72)
+    PresetsScroll.Size = UDim2.new(1, -20, 1, -134)
+    PresetsScroll.Position = UDim2.new(0, 10, 0, 88)
     PresetsScroll.BackgroundTransparency = 1
     PresetsScroll.BorderSizePixel = 0
-    PresetsScroll.ScrollBarThickness = 2
+    PresetsScroll.ScrollBarThickness = 3
     PresetsScroll.ScrollBarImageColor3 = Colors.Accent
     PresetsScroll.ZIndex = 6002
     PresetsScroll.Parent = PresetsModal
 
     local PresetsLayout = Instance.new("UIListLayout")
-    PresetsLayout.Padding = UDim.new(0, 4)
+    PresetsLayout.Padding = UDim.new(0, 6)
     PresetsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     PresetsLayout.Parent = PresetsScroll
 
     -- Footer: Autoload Status & Reset Button
     local FooterFrame = Instance.new("Frame")
-    FooterFrame.Size = UDim2.new(1, -16, 0, 32)
-    FooterFrame.Position = UDim2.new(0, 8, 1, -36)
+    FooterFrame.Size = UDim2.new(1, -20, 0, 36)
+    FooterFrame.Position = UDim2.new(0, 10, 1, -40)
     FooterFrame.BackgroundTransparency = 1
     FooterFrame.ZIndex = 6002
     FooterFrame.Parent = PresetsModal
@@ -1228,8 +1337,8 @@ function RaxorHub:Window(GuiConfig)
     FooterDivider.Parent = FooterFrame
 
     local FooterStarIcon = Instance.new("ImageLabel")
-    FooterStarIcon.Size = UDim2.new(0, 13, 0, 13)
-    FooterStarIcon.Position = UDim2.new(0, 2, 0.5, -6)
+    FooterStarIcon.Size = UDim2.new(0, 14, 0, 14)
+    FooterStarIcon.Position = UDim2.new(0, 4, 0.5, -7)
     FooterStarIcon.Image = Icons.Star
     FooterStarIcon.ImageColor3 = Colors.Accent
     FooterStarIcon.BackgroundTransparency = 1
@@ -1237,8 +1346,8 @@ function RaxorHub:Window(GuiConfig)
     FooterStarIcon.Parent = FooterFrame
 
     local FooterAutoLabel = Instance.new("TextLabel")
-    FooterAutoLabel.Size = UDim2.new(1, -72, 1, -1)
-    FooterAutoLabel.Position = UDim2.new(0, 20, 0, 1)
+    FooterAutoLabel.Size = UDim2.new(1, -84, 1, -1)
+    FooterAutoLabel.Position = UDim2.new(0, 24, 0, 1)
     FooterAutoLabel.BackgroundTransparency = 1
     FooterAutoLabel.Font = Fonts.Medium
     FooterAutoLabel.TextSize = 11
@@ -1249,21 +1358,33 @@ function RaxorHub:Window(GuiConfig)
     FooterAutoLabel.Parent = FooterFrame
 
     local FooterResetBtn = Instance.new("TextButton")
-    FooterResetBtn.Size = UDim2.new(0, 48, 0, 20)
-    FooterResetBtn.Position = UDim2.new(1, -48, 0.5, -9)
+    FooterResetBtn.Size = UDim2.new(0, 56, 0, 24)
+    FooterResetBtn.Position = UDim2.new(1, -56, 0.5, -12)
     FooterResetBtn.BackgroundColor3 = Colors.ButtonBg
     FooterResetBtn.Text = "Reset"
     FooterResetBtn.Font = Fonts.Medium
-    FooterResetBtn.TextSize = 10
+    FooterResetBtn.TextSize = 11
     FooterResetBtn.TextColor3 = Colors.SubText
+    FooterResetBtn.AutoButtonColor = false
     FooterResetBtn.ZIndex = 6003
     FooterResetBtn.Parent = FooterFrame
-    Instance.new("UICorner", FooterResetBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", FooterResetBtn).CornerRadius = UDim.new(0, 5)
     AddStroke(FooterResetBtn, Colors.Border, 1)
 
+    FooterResetBtn.MouseEnter:Connect(function()
+        Tween(FooterResetBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonHover, TextColor3 = Colors.White})
+    end)
+    FooterResetBtn.MouseLeave:Connect(function()
+        Tween(FooterResetBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonBg, TextColor3 = Colors.SubText})
+    end)
+    AttachTooltip(FooterResetBtn, "ยกเลิก Autoload (Clear Autoload)")
+
     local function RefreshPresetsList()
+        -- FIX BUG: Clean up ALL previous items (including TextLabel and Frames) except layouts
         for _, c in pairs(PresetsScroll:GetChildren()) do
-            if c:IsA("Frame") then c:Destroy() end
+            if not c:IsA("UIListLayout") and not c:IsA("UIPadding") then
+                c:Destroy()
+            end
         end
 
         local currentAutoload = RaxorHub:GetAutoload()
@@ -1280,73 +1401,106 @@ function RaxorHub:Window(GuiConfig)
         end
 
         local configs = RaxorHub:GetConfigList()
-        PresetsScroll.CanvasSize = UDim2.new(0, 0, 0, #configs * 36)
+        PresetsScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(#configs * 50, 0))
 
         if #configs == 0 then
+            local emptyContainer = Instance.new("Frame")
+            emptyContainer.Name = "EmptyState"
+            emptyContainer.Size = UDim2.new(1, 0, 0, 110)
+            emptyContainer.BackgroundTransparency = 1
+            emptyContainer.ZIndex = 6003
+            emptyContainer.Parent = PresetsScroll
+
+            local emptyIcon = Instance.new("ImageLabel")
+            emptyIcon.Size = UDim2.new(0, 32, 0, 32)
+            emptyIcon.Position = UDim2.new(0.5, -16, 0, 20)
+            emptyIcon.Image = Icons.Folder
+            emptyIcon.ImageColor3 = Colors.MutedText
+            emptyIcon.ImageTransparency = 0.5
+            emptyIcon.BackgroundTransparency = 1
+            emptyIcon.ZIndex = 6004
+            emptyIcon.Parent = emptyContainer
+
             local emptyLabel = Instance.new("TextLabel")
-            emptyLabel.Size = UDim2.new(1, 0, 0, 50)
+            emptyLabel.Size = UDim2.new(1, 0, 0, 24)
+            emptyLabel.Position = UDim2.new(0, 0, 0, 58)
             emptyLabel.Text = "No saved configs"
-            emptyLabel.Font = Fonts.Regular
+            emptyLabel.Font = Fonts.Medium
             emptyLabel.TextSize = 12
             emptyLabel.TextColor3 = Colors.MutedText
             emptyLabel.BackgroundTransparency = 1
-            emptyLabel.ZIndex = 6003
-            emptyLabel.Parent = PresetsScroll
+            emptyLabel.ZIndex = 6004
+            emptyLabel.Parent = emptyContainer
             return
         end
 
         for _, cfgName in ipairs(configs) do
             local isAuto = (currentAutoload == cfgName)
             local itemRow = Instance.new("Frame")
-            itemRow.Size = UDim2.new(1, -4, 0, 32)
+            itemRow.Size = UDim2.new(1, -2, 0, 44)
             itemRow.BackgroundColor3 = isAuto and Colors.CardHover or Colors.CardBg
             itemRow.ZIndex = 6003
             itemRow.Parent = PresetsScroll
-            Instance.new("UICorner", itemRow).CornerRadius = UDim.new(0, 5)
-            AddStroke(itemRow, isAuto and Colors.Accent or Colors.Border, 1)
+            Instance.new("UICorner", itemRow).CornerRadius = UDim.new(0, 7)
+            local rowStroke = AddStroke(itemRow, isAuto and Colors.Accent or Colors.Border, 1)
 
             local itemLabel = Instance.new("TextLabel")
             itemLabel.Text = (isAuto and "★ " or "") .. cfgName
             itemLabel.Font = isAuto and Fonts.Title or Fonts.Medium
-            itemLabel.TextSize = 11
+            itemLabel.TextSize = 12
             itemLabel.TextColor3 = isAuto and Colors.Accent or Colors.Text
-            itemLabel.Position = UDim2.new(0, 8, 0, 0)
-            itemLabel.Size = UDim2.new(1, -118, 1, 0)
+            itemLabel.Position = UDim2.new(0, 10, 0, 0)
+            itemLabel.Size = UDim2.new(1, -168, 1, 0)
             itemLabel.TextXAlignment = Enum.TextXAlignment.Left
             itemLabel.TextTruncate = Enum.TextTruncate.AtEnd
             itemLabel.BackgroundTransparency = 1
             itemLabel.ZIndex = 6004
             itemLabel.Parent = itemRow
 
-            -- 1. Load Button
+            -- 1. Load Button (Width 44, Height 28)
             local loadBtn = Instance.new("TextButton")
-            loadBtn.Size = UDim2.new(0, 38, 0, 20)
-            loadBtn.Position = UDim2.new(1, -108, 0.5, -10)
+            loadBtn.Size = UDim2.new(0, 44, 0, 28)
+            loadBtn.Position = UDim2.new(1, -156, 0.5, -14)
             loadBtn.BackgroundColor3 = Colors.Accent
             loadBtn.Text = "Load"
             loadBtn.Font = Fonts.Title
             loadBtn.TextSize = 11
             loadBtn.TextColor3 = Colors.White
+            loadBtn.AutoButtonColor = false
             loadBtn.ZIndex = 6004
             loadBtn.Parent = itemRow
-            Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 4)
+            Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 5)
 
+            loadBtn.MouseEnter:Connect(function()
+                Tween(loadBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.AccentHover})
+            end)
+            loadBtn.MouseLeave:Connect(function()
+                Tween(loadBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.Accent})
+            end)
             loadBtn.MouseButton1Click:Connect(function()
                 RaxorHub:LoadConfigData(cfgName)
             end)
+            AttachTooltip(loadBtn, "โหลดการตั้งค่านี้ (Load Config)")
 
-            -- 2. Overwrite Button (Floppy disk icon)
+            -- 2. Overwrite Button (Width 28, Height 28)
             local overwriteBtn = Instance.new("ImageButton")
-            overwriteBtn.Size = UDim2.new(0, 18, 0, 18)
-            overwriteBtn.Position = UDim2.new(1, -66, 0.5, -9)
-            overwriteBtn.BackgroundTransparency = 1
+            overwriteBtn.Size = UDim2.new(0, 28, 0, 28)
+            overwriteBtn.Position = UDim2.new(1, -106, 0.5, -14)
+            overwriteBtn.BackgroundColor3 = Colors.ButtonBg
             overwriteBtn.Image = Icons.Save
             overwriteBtn.ImageColor3 = Colors.SubText
+            overwriteBtn.AutoButtonColor = false
             overwriteBtn.ZIndex = 6004
             overwriteBtn.Parent = itemRow
+            Instance.new("UICorner", overwriteBtn).CornerRadius = UDim.new(0, 5)
+            AddStroke(overwriteBtn, Colors.Border, 1)
 
-            overwriteBtn.MouseEnter:Connect(function() overwriteBtn.ImageColor3 = Colors.Accent end)
-            overwriteBtn.MouseLeave:Connect(function() overwriteBtn.ImageColor3 = Colors.SubText end)
+            overwriteBtn.MouseEnter:Connect(function()
+                Tween(overwriteBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonHover, ImageColor3 = Colors.White})
+            end)
+            overwriteBtn.MouseLeave:Connect(function()
+                Tween(overwriteBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonBg, ImageColor3 = Colors.SubText})
+            end)
             overwriteBtn.MouseButton1Click:Connect(function()
                 RaxorHub:SaveCurrentConfig(cfgName)
                 RaxorHub:Notify({
@@ -1355,19 +1509,31 @@ function RaxorHub:Window(GuiConfig)
                     Duration = 2.5
                 })
             end)
+            AttachTooltip(overwriteBtn, "เขียนทับด้วยการตั้งค่าปัจจุบัน (Overwrite)")
 
-            -- 3. Autoload Toggle Button (Star icon)
+            -- 3. Autoload Toggle Button (Width 28, Height 28)
             local autoBtn = Instance.new("ImageButton")
-            autoBtn.Size = UDim2.new(0, 18, 0, 18)
-            autoBtn.Position = UDim2.new(1, -44, 0.5, -9)
-            autoBtn.BackgroundTransparency = 1
+            autoBtn.Size = UDim2.new(0, 28, 0, 28)
+            autoBtn.Position = UDim2.new(1, -72, 0.5, -14)
+            autoBtn.BackgroundColor3 = isAuto and Colors.CardHover or Colors.ButtonBg
             autoBtn.Image = Icons.Star
             autoBtn.ImageColor3 = isAuto and Colors.Accent or Colors.MutedText
+            autoBtn.AutoButtonColor = false
             autoBtn.ZIndex = 6004
             autoBtn.Parent = itemRow
+            Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 5)
+            AddStroke(autoBtn, isAuto and Colors.Accent or Colors.Border, 1)
 
-            autoBtn.MouseEnter:Connect(function() autoBtn.ImageColor3 = Colors.Accent end)
-            autoBtn.MouseLeave:Connect(function() autoBtn.ImageColor3 = (RaxorHub:GetAutoload() == cfgName) and Colors.Accent or Colors.MutedText end)
+            autoBtn.MouseEnter:Connect(function()
+                Tween(autoBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonHover, ImageColor3 = Colors.Accent})
+            end)
+            autoBtn.MouseLeave:Connect(function()
+                local currAuto = (RaxorHub:GetAutoload() == cfgName)
+                Tween(autoBtn, TweenInfo.new(0.12), {
+                    BackgroundColor3 = currAuto and Colors.CardHover or Colors.ButtonBg,
+                    ImageColor3 = currAuto and Colors.Accent or Colors.MutedText
+                })
+            end)
             autoBtn.MouseButton1Click:Connect(function()
                 if RaxorHub:GetAutoload() == cfgName then
                     RaxorHub:ResetAutoload()
@@ -1376,23 +1542,37 @@ function RaxorHub:Window(GuiConfig)
                 end
                 RefreshPresetsList()
             end)
+            AttachTooltip(autoBtn, isAuto and "ยกเลิกโหลดอัตโนมัติ (Disable Autoload)" or "ตั้งเป็นโหลดอัตโนมัติ (Enable Autoload)")
 
-            -- 4. Delete Button (Trash icon)
+            -- 4. Delete Button (Width 28, Height 28 - Custom Asset 93749431604052)
             local delBtn = Instance.new("ImageButton")
-            delBtn.Size = UDim2.new(0, 18, 0, 18)
-            delBtn.Position = UDim2.new(1, -22, 0.5, -9)
-            delBtn.BackgroundTransparency = 1
+            delBtn.Size = UDim2.new(0, 28, 0, 28)
+            delBtn.Position = UDim2.new(1, -38, 0.5, -14)
+            delBtn.BackgroundColor3 = Colors.ButtonBg
             delBtn.Image = Icons.Trash
             delBtn.ImageColor3 = Colors.SubText
+            delBtn.AutoButtonColor = false
             delBtn.ZIndex = 6004
             delBtn.Parent = itemRow
+            Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            AddStroke(delBtn, Colors.Border, 1)
 
-            delBtn.MouseEnter:Connect(function() delBtn.ImageColor3 = Colors.CloseRed end)
-            delBtn.MouseLeave:Connect(function() delBtn.ImageColor3 = Colors.SubText end)
+            delBtn.MouseEnter:Connect(function()
+                Tween(delBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.CloseRed, ImageColor3 = Colors.White})
+            end)
+            delBtn.MouseLeave:Connect(function()
+                Tween(delBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonBg, ImageColor3 = Colors.SubText})
+            end)
             delBtn.MouseButton1Click:Connect(function()
                 RaxorHub:DeleteConfig(cfgName)
                 RefreshPresetsList()
+                RaxorHub:Notify({
+                    Title = "Preset Deleted",
+                    Content = "ลบการตั้งค่า '" .. cfgName .. "' สำเร็จ",
+                    Duration = 2.5
+                })
             end)
+            AttachTooltip(delBtn, "ลบ Preset นี้อย่างถาวร (Delete Config)")
         end
     end
     RaxorHub.RefreshPresetsList = RefreshPresetsList
@@ -1408,6 +1588,11 @@ function RaxorHub:Window(GuiConfig)
             RaxorHub:SaveCurrentConfig(name)
             ConfigNameInput.Text = ""
             RefreshPresetsList()
+            RaxorHub:Notify({
+                Title = "Preset Saved",
+                Content = "บันทึกการตั้งค่า '" .. name .. "' สำเร็จ",
+                Duration = 2.5
+            })
         else
             RaxorHub:Notify({
                 Title = "Error",
@@ -1424,6 +1609,11 @@ function RaxorHub:Window(GuiConfig)
                 RaxorHub:SaveCurrentConfig(name)
                 ConfigNameInput.Text = ""
                 RefreshPresetsList()
+                RaxorHub:Notify({
+                    Title = "Preset Saved",
+                    Content = "บันทึกการตั้งค่า '" .. name .. "' สำเร็จ",
+                    Duration = 2.5
+                })
             end
         end
     end)
