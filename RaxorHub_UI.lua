@@ -144,7 +144,7 @@ local Colors = {
     AccentGlow      = Color3.fromRGB(124, 92, 252),    -- Glow Highlights
 
     Text            = Color3.fromRGB(245, 246, 250),   -- Primary White Text
-    SubText         = Color3.fromRGB(160, 164, 180),   -- Secondary Text (Crisp for Thai)
+    SubText         = Color3.fromRGB(175, 180, 198),   -- Secondary Text (Crisp for Thai)
     MutedText       = Color3.fromRGB(105, 110, 128),   -- Muted / Placeholder Text
 
     Border          = Color3.fromRGB(34, 36, 46),      -- Subtle Border #22242E
@@ -205,8 +205,8 @@ RaxorHub.Icons = Icons
 
 -- [[ Sizing Definitions (Spaced generously for Thai tone marks) ]]
 local SizeItem = {
-    BoxItem   = UDim2.new(1, -4, 0, 58),  -- Height 58px for full Thai vowel rendering
-    TitleItem = UDim2.new(1, -4, 0, 38)
+    BoxItem   = UDim2.new(1, -4, 0, 60),  -- Height 60px for full Thai vowel rendering
+    TitleItem = UDim2.new(1, -4, 0, 50)   -- Height 50px for Section headers with Thai description
 }
 
 -- [[ Helper Utilities ]]
@@ -1807,9 +1807,12 @@ function RaxorHub:Window(GuiConfig)
             SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
             SectionLayout.Parent = SectionFrame
 
+            local hasDesc = Description and Description ~= ""
+            local xPos = IconID and 34 or 12
+
             -- Header Container
             local HeaderContainer = Instance.new("Frame")
-            HeaderContainer.Size = SizeItem.TitleItem
+            HeaderContainer.Size = hasDesc and SizeItem.TitleItem or UDim2.new(1, -4, 0, 36)
             HeaderContainer.BackgroundColor3 = Colors.SectionHeaderBg
             HeaderContainer.BorderSizePixel = 0
             HeaderContainer.ZIndex = 28
@@ -1828,15 +1831,12 @@ function RaxorHub:Window(GuiConfig)
                 SecIcon.Parent = HeaderContainer
             end
 
-            local hasDesc = Description and Description ~= ""
-            local xPos = IconID and 34 or 12
-
             local HeaderTitle = Instance.new("TextLabel")
-            HeaderTitle.Size = UDim2.new(1, -45, 0, 18)
-            HeaderTitle.Position = hasDesc and UDim2.new(0, xPos, 0, 4) or UDim2.new(0, xPos, 0.5, -9)
+            HeaderTitle.Size = UDim2.new(1, -xPos - 12, 0, 20)
+            HeaderTitle.Position = hasDesc and UDim2.new(0, xPos, 0, 6) or UDim2.new(0, xPos, 0.5, -10)
             HeaderTitle.Text = Title
             HeaderTitle.Font = Fonts.Title
-            HeaderTitle.TextSize = 13
+            HeaderTitle.TextSize = 14
             HeaderTitle.TextColor3 = Colors.Text
             HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
             HeaderTitle.BackgroundTransparency = 1
@@ -1845,11 +1845,11 @@ function RaxorHub:Window(GuiConfig)
 
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
-                Desc.Size = UDim2.new(1, -45, 0, 18)
-                Desc.Position = UDim2.new(0, xPos, 0, 20)
+                Desc.Size = UDim2.new(1, -xPos - 12, 0, 20)
+                Desc.Position = UDim2.new(0, xPos, 0, 26)
                 Desc.Text = Description
                 Desc.Font = Fonts.Medium
-                Desc.TextSize = 12
+                Desc.TextSize = 14
                 Desc.TextColor3 = Colors.SubText
                 Desc.TextXAlignment = Enum.TextXAlignment.Left
                 Desc.BackgroundTransparency = 1
@@ -1881,10 +1881,10 @@ function RaxorHub:Window(GuiConfig)
                     local TDesc = Instance.new("TextLabel")
                     TDesc.Name = "TDesc"
                     TDesc.Text = desc
-                    TDesc.Size = UDim2.new(1, -rightSpace, 0, 20)
-                    TDesc.Position = UDim2.new(0, 14, 0, 28)
+                    TDesc.Size = UDim2.new(1, -rightSpace, 0, 22)
+                    TDesc.Position = UDim2.new(0, 14, 0, 29)
                     TDesc.Font = Fonts.Medium
-                    TDesc.TextSize = 13
+                    TDesc.TextSize = 14
                     TDesc.TextColor3 = Colors.SubText
                     TDesc.TextXAlignment = Enum.TextXAlignment.Left
                     TDesc.BackgroundTransparency = 1
