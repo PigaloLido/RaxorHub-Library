@@ -2507,7 +2507,7 @@ function RaxorHub:Window(GuiConfig)
                 end)
             end
 
-            -- [[ Color Picker Control (Blade Modern HSV Color Picker Image 9) ]]
+            -- [[ Color Picker Control (Blade Modern Full HSV Color Picker) ]]
             function sectionItems:AddColorPicker(Config)
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
@@ -2520,6 +2520,7 @@ function RaxorHub:Window(GuiConfig)
                 SetupRowText(Row, Config.Title, Config.Description, 100)
 
                 local currentColor = Config.Default or Colors.Accent
+                local currentH, currentS, currentV = currentColor:ToHSV()
                 UpdateState(Config.ID, currentColor)
 
                 local ColorBox = Instance.new("TextButton")
@@ -2534,30 +2535,187 @@ function RaxorHub:Window(GuiConfig)
                 AddStroke(ColorBox, Colors.BorderFocus, 1)
 
                 local PickerModal = Instance.new("Frame")
-                PickerModal.Size = UDim2.new(0, 180, 0, 200)
+                PickerModal.Name = "ColorPickerModal"
+                PickerModal.Size = UDim2.new(0, 220, 0, 242)
                 PickerModal.BackgroundColor3 = Colors.ModalBg
                 PickerModal.Visible = false
                 PickerModal.ZIndex = 7500
                 PickerModal.ClipsDescendants = true
                 PickerModal.Parent = MainFrame
                 Instance.new("UICorner", PickerModal).CornerRadius = UDim.new(0, 8)
-                AddStroke(PickerModal, Colors.BorderFocus, 1)
+                AddStroke(PickerModal, Colors.BorderFocus, 1.2)
 
                 local PickerTitle = Instance.new("TextLabel")
                 PickerTitle.Text = Config.Title or "Color Picker"
                 PickerTitle.Font = Fonts.Title
                 PickerTitle.TextSize = 12
                 PickerTitle.TextColor3 = Colors.Text
-                PickerTitle.Size = UDim2.new(1, -16, 0, 22)
-                PickerTitle.Position = UDim2.new(0, 8, 0, 4)
+                PickerTitle.Size = UDim2.new(1, -38, 0, 20)
+                PickerTitle.Position = UDim2.new(0, 10, 0, 5)
                 PickerTitle.TextXAlignment = Enum.TextXAlignment.Left
                 PickerTitle.BackgroundTransparency = 1
                 PickerTitle.ZIndex = 7501
                 PickerTitle.Parent = PickerModal
 
+                local ClosePickerBtn = Instance.new("ImageButton")
+                ClosePickerBtn.Size = UDim2.new(0, 16, 0, 16)
+                ClosePickerBtn.Position = UDim2.new(1, -24, 0, 7)
+                ClosePickerBtn.BackgroundTransparency = 1
+                ClosePickerBtn.Image = Icons.Close
+                ClosePickerBtn.ImageColor3 = Colors.SubText
+                ClosePickerBtn.AutoButtonColor = false
+                ClosePickerBtn.ZIndex = 7502
+                ClosePickerBtn.Parent = PickerModal
+
+                ClosePickerBtn.MouseEnter:Connect(function() ClosePickerBtn.ImageColor3 = Colors.CloseRed end)
+                ClosePickerBtn.MouseLeave:Connect(function() ClosePickerBtn.ImageColor3 = Colors.SubText end)
+                ClosePickerBtn.MouseButton1Click:Connect(function()
+                    PickerModal.Visible = false
+                    activeColorPicker = nil
+                end)
+
+                -- 2D Saturation / Value Canvas Box
+                local svCanvas = Instance.new("TextButton")
+                svCanvas.Name = "SVCanvas"
+                svCanvas.Size = UDim2.new(1, -20, 0, 116)
+                svCanvas.Position = UDim2.new(0, 10, 0, 27)
+                svCanvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+                svCanvas.BorderSizePixel = 0
+                svCanvas.AutoButtonColor = false
+                svCanvas.Text = ""
+                svCanvas.ClipsDescendants = true
+                svCanvas.ZIndex = 7501
+                svCanvas.Parent = PickerModal
+                Instance.new("UICorner", svCanvas).CornerRadius = UDim.new(0, 6)
+                AddStroke(svCanvas, Colors.Border, 1)
+
+                -- Horizontal White Overlay (Saturation: 0 at left, 1 at right)
+                local whiteOverlay = Instance.new("Frame")
+                whiteOverlay.Size = UDim2.new(1, 0, 1, 0)
+                whiteOverlay.BackgroundColor3 = Color3.new(1, 1, 1)
+                whiteOverlay.BorderSizePixel = 0
+                whiteOverlay.ZIndex = 7502
+                whiteOverlay.Parent = svCanvas
+                local whiteGrad = Instance.new("UIGradient", whiteOverlay)
+                whiteGrad.Rotation = 0
+                whiteGrad.Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
+
+                -- Vertical Black Overlay (Brightness/Value: 1 at top, 0 at bottom)
+                local blackOverlay = Instance.new("Frame")
+                blackOverlay.Size = UDim2.new(1, 0, 1, 0)
+                blackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+                blackOverlay.BorderSizePixel = 0
+                blackOverlay.ZIndex = 7503
+                blackOverlay.Parent = svCanvas
+                local blackGrad = Instance.new("UIGradient", blackOverlay)
+                blackGrad.Rotation = 90
+                blackGrad.Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(1, 0)
+                })
+
+                -- Circular Selector Pin on SV Canvas
+                local svCursor = Instance.new("Frame")
+                svCursor.Name = "Cursor"
+                svCursor.Size = UDim2.new(0, 12, 0, 12)
+                svCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+                svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+                svCursor.BackgroundColor3 = currentColor
+                svCursor.BorderSizePixel = 0
+                svCursor.ZIndex = 7505
+                svCursor.Parent = svCanvas
+                Instance.new("UICorner", svCursor).CornerRadius = UDim.new(1, 0)
+                AddStroke(svCursor, Color3.new(1, 1, 1), 2)
+
+                -- Hue Rainbow Slider Bar
+                local hueBar = Instance.new("TextButton")
+                hueBar.Name = "HueBar"
+                hueBar.Size = UDim2.new(1, -20, 0, 14)
+                hueBar.Position = UDim2.new(0, 10, 0, 149)
+                hueBar.BackgroundColor3 = Color3.new(1, 1, 1)
+                hueBar.BorderSizePixel = 0
+                hueBar.AutoButtonColor = false
+                hueBar.Text = ""
+                hueBar.ClipsDescendants = false
+                hueBar.ZIndex = 7501
+                hueBar.Parent = PickerModal
+                Instance.new("UICorner", hueBar).CornerRadius = UDim.new(0, 7)
+                AddStroke(hueBar, Colors.Border, 1)
+
+                local hueGrad = Instance.new("UIGradient", hueBar)
+                hueGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0.00, Color3.fromHSV(0/6, 1, 1)),
+                    ColorSequenceKeypoint.new(0.17, Color3.fromHSV(1/6, 1, 1)),
+                    ColorSequenceKeypoint.new(0.33, Color3.fromHSV(2/6, 1, 1)),
+                    ColorSequenceKeypoint.new(0.50, Color3.fromHSV(3/6, 1, 1)),
+                    ColorSequenceKeypoint.new(0.67, Color3.fromHSV(4/6, 1, 1)),
+                    ColorSequenceKeypoint.new(0.83, Color3.fromHSV(5/6, 1, 1)),
+                    ColorSequenceKeypoint.new(1.00, Color3.fromHSV(1.0, 1, 1))
+                })
+
+                local hueCursor = Instance.new("Frame")
+                hueCursor.Name = "HueCursor"
+                hueCursor.Size = UDim2.new(0, 8, 0, 18)
+                hueCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+                hueCursor.Position = UDim2.new(currentH, 0, 0.5, 0)
+                hueCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+                hueCursor.BorderSizePixel = 0
+                hueCursor.ZIndex = 7505
+                hueCursor.Parent = hueBar
+                Instance.new("UICorner", hueCursor).CornerRadius = UDim.new(0, 4)
+                AddStroke(hueCursor, Color3.fromRGB(30, 32, 40), 1.5)
+
+                -- Info / Hex / RGB Row
+                local InfoRow = Instance.new("Frame")
+                InfoRow.Size = UDim2.new(1, -20, 0, 22)
+                InfoRow.Position = UDim2.new(0, 10, 0, 171)
+                InfoRow.BackgroundTransparency = 1
+                InfoRow.ZIndex = 7501
+                InfoRow.Parent = PickerModal
+
+                local PreviewBox = Instance.new("Frame")
+                PreviewBox.Size = UDim2.new(0, 22, 0, 22)
+                PreviewBox.Position = UDim2.new(0, 0, 0, 0)
+                PreviewBox.BackgroundColor3 = currentColor
+                PreviewBox.BorderSizePixel = 0
+                PreviewBox.ZIndex = 7502
+                PreviewBox.Parent = InfoRow
+                Instance.new("UICorner", PreviewBox).CornerRadius = UDim.new(0, 4)
+                AddStroke(PreviewBox, Colors.BorderFocus, 1)
+
+                local HexInput = Instance.new("TextBox")
+                HexInput.Size = UDim2.new(0, 72, 0, 22)
+                HexInput.Position = UDim2.new(0, 28, 0, 0)
+                HexInput.BackgroundColor3 = Colors.InputBg
+                HexInput.Text = "#" .. currentColor:ToHex():upper()
+                HexInput.Font = Fonts.Code
+                HexInput.TextSize = 11
+                HexInput.TextColor3 = Colors.Text
+                HexInput.ClearTextOnFocus = false
+                HexInput.ZIndex = 7502
+                HexInput.Parent = InfoRow
+                Instance.new("UICorner", HexInput).CornerRadius = UDim.new(0, 4)
+                AddStroke(HexInput, Colors.Border, 1)
+
+                local RGBLabel = Instance.new("TextLabel")
+                RGBLabel.Size = UDim2.new(1, -106, 0, 22)
+                RGBLabel.Position = UDim2.new(0, 106, 0, 0)
+                RGBLabel.BackgroundTransparency = 1
+                RGBLabel.Font = Fonts.Code
+                RGBLabel.TextSize = 10
+                RGBLabel.TextColor3 = Colors.SubText
+                RGBLabel.TextXAlignment = Enum.TextXAlignment.Right
+                RGBLabel.Text = string.format("R:%d G:%d B:%d", math.round(currentColor.R * 255), math.round(currentColor.G * 255), math.round(currentColor.B * 255))
+                RGBLabel.ZIndex = 7502
+                RGBLabel.Parent = InfoRow
+
+                -- Preset Palette Dots Row
                 local PaletteRow = Instance.new("Frame")
-                PaletteRow.Size = UDim2.new(1, -16, 0, 24)
-                PaletteRow.Position = UDim2.new(0, 8, 1, -30)
+                PaletteRow.Size = UDim2.new(1, -20, 0, 24)
+                PaletteRow.Position = UDim2.new(0, 10, 0, 202)
                 PaletteRow.BackgroundTransparency = 1
                 PaletteRow.ZIndex = 7501
                 PaletteRow.Parent = PickerModal
@@ -2565,57 +2723,165 @@ function RaxorHub:Window(GuiConfig)
                 local PaletteLayout = Instance.new("UIListLayout", PaletteRow)
                 PaletteLayout.FillDirection = Enum.FillDirection.Horizontal
                 PaletteLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                PaletteLayout.Padding = UDim.new(0, 6)
+                PaletteLayout.Padding = UDim.new(0, 7)
 
                 local presets = {
                     Color3.fromRGB(124, 92, 252), -- Blade Purple
-                    Color3.fromRGB(80, 150, 255), -- Sky Blue
-                    Color3.fromRGB(60, 220, 140), -- Green
-                    Color3.fromRGB(255, 190, 40),  -- Amber
-                    Color3.fromRGB(245, 70, 80),   -- Red
-                    Color3.fromRGB(255, 100, 200)  -- Pink
+                    Color3.fromRGB(56, 150, 255),  -- Sky Blue
+                    Color3.fromRGB(46, 213, 115),  -- Emerald Green
+                    Color3.fromRGB(255, 177, 66),  -- Amber Gold
+                    Color3.fromRGB(255, 71, 87),   -- Crimson Red
+                    Color3.fromRGB(255, 107, 181), -- Hot Pink
+                    Color3.fromRGB(255, 255, 255)  -- Pure White
                 }
+
+                local function ApplyColorChange(skipHex)
+                    currentColor = Color3.fromHSV(currentH, currentS, currentV)
+                    ColorBox.BackgroundColor3 = currentColor
+                    PreviewBox.BackgroundColor3 = currentColor
+                    svCursor.BackgroundColor3 = currentColor
+                    if not skipHex then
+                        HexInput.Text = "#" .. currentColor:ToHex():upper()
+                    end
+                    RGBLabel.Text = string.format("R:%d G:%d B:%d", math.round(currentColor.R * 255), math.round(currentColor.G * 255), math.round(currentColor.B * 255))
+                    UpdateState(Config.ID, currentColor)
+                    if Config.Callback then
+                        Config.Callback(currentColor)
+                    end
+                end
 
                 for _, pColor in ipairs(presets) do
                     local dot = Instance.new("TextButton")
                     dot.Size = UDim2.new(0, 18, 0, 18)
                     dot.BackgroundColor3 = pColor
                     dot.Text = ""
+                    dot.AutoButtonColor = false
                     dot.ZIndex = 7502
                     dot.Parent = PaletteRow
                     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
                     AddStroke(dot, Colors.Border, 1)
 
                     dot.MouseButton1Click:Connect(function()
-                        currentColor = pColor
-                        ColorBox.BackgroundColor3 = currentColor
-                        UpdateState(Config.ID, currentColor)
-                        if Config.Callback then Config.Callback(currentColor) end
+                        currentH, currentS, currentV = pColor:ToHSV()
+                        svCanvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+                        svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+                        hueCursor.Position = UDim2.new(currentH, 0, 0.5, 0)
+                        ApplyColorChange()
                     end)
                 end
 
-                local HexLabel = Instance.new("TextLabel")
-                HexLabel.Size = UDim2.new(1, -16, 0, 20)
-                HexLabel.Position = UDim2.new(0, 8, 0, 136)
-                HexLabel.Text = "#" .. currentColor:ToHex()
-                HexLabel.Font = Fonts.Code
-                HexLabel.TextSize = 11
-                HexLabel.TextColor3 = Colors.SubText
-                HexLabel.BackgroundTransparency = 1
-                HexLabel.ZIndex = 7501
-                HexLabel.Parent = PickerModal
+                -- Direct Hex Input handler
+                HexInput.FocusLost:Connect(function()
+                    local text = HexInput.Text:gsub("#", ""):gsub("%s+", "")
+                    if #text == 6 then
+                        local ok, parsed = pcall(function() return Color3.fromHex(text) end)
+                        if ok and parsed then
+                            currentH, currentS, currentV = parsed:ToHSV()
+                            svCanvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+                            svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+                            hueCursor.Position = UDim2.new(currentH, 0, 0.5, 0)
+                            ApplyColorChange(true)
+                        else
+                            HexInput.Text = "#" .. currentColor:ToHex():upper()
+                        end
+                    else
+                        HexInput.Text = "#" .. currentColor:ToHex():upper()
+                    end
+                end)
+
+                -- Dragging Logic for SV Canvas and Hue Bar
+                local isDraggingSV = false
+                local isDraggingHue = false
+
+                local function UpdateSV(inputPos)
+                    local canvasPos = svCanvas.AbsolutePosition
+                    local canvasSize = svCanvas.AbsoluteSize
+                    if canvasSize.X > 0 and canvasSize.Y > 0 then
+                        local relX = math.clamp((inputPos.X - canvasPos.X) / canvasSize.X, 0, 1)
+                        local relY = math.clamp((inputPos.Y - canvasPos.Y) / canvasSize.Y, 0, 1)
+                        currentS = relX
+                        currentV = 1 - relY
+                        svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+                        ApplyColorChange()
+                    end
+                end
+
+                local function UpdateHue(inputPos)
+                    local barPos = hueBar.AbsolutePosition
+                    local barSize = hueBar.AbsoluteSize
+                    if barSize.X > 0 then
+                        local relX = math.clamp((inputPos.X - barPos.X) / barSize.X, 0, 1)
+                        currentH = relX
+                        hueCursor.Position = UDim2.new(currentH, 0, 0.5, 0)
+                        svCanvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+                        ApplyColorChange()
+                    end
+                end
+
+                svCanvas.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isDraggingSV = true
+                        UpdateSV(input.Position)
+                    end
+                end)
+
+                hueBar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isDraggingHue = true
+                        UpdateHue(input.Position)
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                        if isDraggingSV then
+                            UpdateSV(input.Position)
+                        elseif isDraggingHue then
+                            UpdateHue(input.Position)
+                        end
+                    end
+                end)
+
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        isDraggingSV = false
+                        isDraggingHue = false
+                    end
+                end)
 
                 ColorBox.MouseButton1Click:Connect(function()
                     if PickerModal.Visible then
                         PickerModal.Visible = false
                         activeColorPicker = nil
+                        isDraggingSV = false
+                        isDraggingHue = false
                     else
                         CloseAllDropdowns()
                         PickerModal.Visible = true
                         activeColorPicker = PickerModal
+
                         local absPos = ColorBox.AbsolutePosition
                         local mainAbsPos = MainFrame.AbsolutePosition
-                        PickerModal.Position = UDim2.new(0, absPos.X - mainAbsPos.X - 140, 0, absPos.Y - mainAbsPos.Y + 26)
+                        local mainSize = MainFrame.AbsoluteSize
+                        local modalW = 220
+                        local modalH = 242
+
+                        local targetX = absPos.X - mainAbsPos.X - modalW + 40
+                        local targetY = absPos.Y - mainAbsPos.Y + 26
+
+                        if targetX + modalW > mainSize.X - 10 then
+                            targetX = mainSize.X - modalW - 10
+                        end
+                        if targetX < 10 then
+                            targetX = 10
+                        end
+
+                        if targetY + modalH > mainSize.Y - 10 then
+                            targetY = (absPos.Y - mainAbsPos.Y) - modalH - 4
+                            if targetY < 10 then targetY = 10 end
+                        end
+
+                        PickerModal.Position = UDim2.new(0, targetX, 0, targetY)
                     end
                 end)
 
@@ -2624,9 +2890,18 @@ function RaxorHub:Window(GuiConfig)
                         Type = "ColorPicker",
                         Default = Config.Default,
                         Update = function(val)
-                            currentColor = val
-                            ColorBox.BackgroundColor3 = currentColor
-                            HexLabel.Text = "#" .. currentColor:ToHex()
+                            if typeof(val) == "Color3" then
+                                currentColor = val
+                                currentH, currentS, currentV = currentColor:ToHSV()
+                                ColorBox.BackgroundColor3 = currentColor
+                                PreviewBox.BackgroundColor3 = currentColor
+                                svCanvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+                                svCursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+                                svCursor.BackgroundColor3 = currentColor
+                                hueCursor.Position = UDim2.new(currentH, 0, 0.5, 0)
+                                HexInput.Text = "#" .. currentColor:ToHex():upper()
+                                RGBLabel.Text = string.format("R:%d G:%d B:%d", math.round(currentColor.R * 255), math.round(currentColor.G * 255), math.round(currentColor.B * 255))
+                            end
                         end,
                         Callback = Config.Callback or function() end
                     }
