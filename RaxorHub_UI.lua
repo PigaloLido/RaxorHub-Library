@@ -1,10 +1,9 @@
 --[[
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
-    ║                  Modern Blade-Client Aesthetic                     ║
-    ║           Optimized for PC & Mobile (Performance-Focused)         ║
-    ║                       Version: v2.1.1                              ║
-    ║                         By : Pigalo                                ║
+    ║                           PC & Mobile                              ║
+    ║                         Version: v2.1.2                            ║
+    ║                           By : Pigalo                              ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
 
@@ -19,7 +18,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.1"
+local UI_VERSION = "v2.1.2"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -192,6 +191,9 @@ local Icons = {
     Restore     = "rbxassetid://109639980556401", -- 10: Window / Restore
     Close       = "rbxassetid://115217200764763", -- 11: Cross / Close
     Folder      = "rbxassetid://136865241981761", -- 12: Presets Folder
+    Dungeon     = "rbxassetid://88481999592471", -- 13: Dungeon
+    Automation  = "rbxassetid://92268014238157", -- 14: Automation
+    Home        = "rbxassetid://107021730323048", -- 15: Home
 
     Search      = "rbxassetid://6031154871",      -- Search Glass
     ChevronDown = "rbxassetid://6034818372",      -- Chevron
