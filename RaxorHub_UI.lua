@@ -2,7 +2,7 @@
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
     ║                           PC & Mobile                              ║
-    ║                         Version: v2.1.2                            ║
+    ║                         Version: v2.1.3                            ║
     ║                           By : Pigalo                              ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -18,7 +18,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.2"
+local UI_VERSION = "v2.1.3"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -954,7 +954,7 @@ function RaxorHub:Window(GuiConfig)
         end)
     end)
 
-    -- [[ Resizer Corner (PC / Touch - Rounded Accent Corner) ]]
+    -- [[ Resizer Corner (Sleek Modern Diagonal Grip Lines) ]]
     local ResizeHandle = Instance.new("Frame")
     ResizeHandle.Name = "ResizeHandle"
     ResizeHandle.Size = UDim2.new(0, 24, 0, 24)
@@ -963,33 +963,44 @@ function RaxorHub:Window(GuiConfig)
     ResizeHandle.ZIndex = 5000
     ResizeHandle.Parent = MainFrame
 
-    local ResizeGrip = Instance.new("Frame")
-    ResizeGrip.Name = "ResizeGrip"
-    ResizeGrip.Size = UDim2.new(0, 13, 0, 13)
-    ResizeGrip.Position = UDim2.new(1, -15, 1, -15)
-    ResizeGrip.BackgroundColor3 = Colors.Accent
-    ResizeGrip.BackgroundTransparency = 0.25
-    ResizeGrip.BorderSizePixel = 0
-    ResizeGrip.ZIndex = 5001
-    ResizeGrip.Parent = ResizeHandle
-    Instance.new("UICorner", ResizeGrip).CornerRadius = UDim.new(0, 6)
-    AddStroke(ResizeGrip, Colors.AccentHover, 1)
+    local gripLines = {}
+    local lineSpecs = {
+        { size = 4,  offset = 6 },
+        { size = 8,  offset = 10 },
+        { size = 12, offset = 14 }
+    }
+
+    for i, spec in ipairs(lineSpecs) do
+        local line = Instance.new("Frame")
+        line.Name = "GripLine" .. i
+        line.Size = UDim2.new(0, spec.size, 0, 2)
+        line.Position = UDim2.new(1, -spec.offset, 1, -spec.offset)
+        line.AnchorPoint = Vector2.new(0.5, 0.5)
+        line.Rotation = -45
+        line.BackgroundColor3 = Colors.MutedText
+        line.BackgroundTransparency = 0.4
+        line.BorderSizePixel = 0
+        line.ZIndex = 5001
+        line.Parent = ResizeHandle
+        Instance.new("UICorner", line).CornerRadius = UDim.new(0, 1)
+        table.insert(gripLines, line)
+    end
 
     ResizeHandle.MouseEnter:Connect(function()
-        Tween(ResizeGrip, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 0,
-            BackgroundColor3 = Colors.AccentHover,
-            Size = UDim2.new(0, 15, 0, 15),
-            Position = UDim2.new(1, -17, 1, -17)
-        })
+        for _, line in ipairs(gripLines) do
+            Tween(line, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Colors.AccentHover,
+                BackgroundTransparency = 0
+            })
+        end
     end)
     ResizeHandle.MouseLeave:Connect(function()
-        Tween(ResizeGrip, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 0.25,
-            BackgroundColor3 = Colors.Accent,
-            Size = UDim2.new(0, 13, 0, 13),
-            Position = UDim2.new(1, -15, 1, -15)
-        })
+        for _, line in ipairs(gripLines) do
+            Tween(line, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Colors.MutedText,
+                BackgroundTransparency = 0.4
+            })
+        end
     end)
 
     AttachTooltip(ResizeHandle, "ลากเพื่อปรับขนาดหน้าต่าง (Drag to Resize)")
@@ -2254,7 +2265,7 @@ function RaxorHub:Window(GuiConfig)
                 SearchBox.Font = Fonts.Regular
                 SearchBox.Text = ""
                 SearchBox.TextSize = 11
-                SearchBox.ZIndex = 7001
+                SearchBox.ZIndex = 9501
                 SearchBox.Parent = List
                 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 4)
                 AddStroke(SearchBox, Colors.Border, 1)
@@ -2266,7 +2277,7 @@ function RaxorHub:Window(GuiConfig)
                 ItemScroll.BorderSizePixel = 0
                 ItemScroll.ScrollBarThickness = 2
                 ItemScroll.ScrollBarImageColor3 = Colors.Accent
-                ItemScroll.ZIndex = 7001
+                ItemScroll.ZIndex = 9501
                 ItemScroll.Parent = List
 
                 local ItemListLayout = Instance.new("UIListLayout", ItemScroll)
@@ -2283,7 +2294,11 @@ function RaxorHub:Window(GuiConfig)
                             return
                         end
                         local absPos = Frame.AbsolutePosition
-                        local contentHeight = ItemListLayout.AbsoluteContentSize.Y
+                        local count = 0
+                        for _, child in pairs(ItemScroll:GetChildren()) do
+                            if child:IsA("TextButton") then count = count + 1 end
+                        end
+                        local contentHeight = math.max(ItemListLayout.AbsoluteContentSize.Y, count * 28)
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
                         local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
                         List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
@@ -2299,10 +2314,12 @@ function RaxorHub:Window(GuiConfig)
 
                 local function Populate(filter)
                     for _, child in pairs(ItemScroll:GetChildren()) do
-                        if child:IsA("TextButton") then child:Destroy() end
+                        if child:IsA("TextButton") or child.Name == "EmptyMsg" then child:Destroy() end
                     end
+                    local matchCount = 0
                     for _, item in pairs(Config.Options or {}) do
                         if filter == "" or string.find(string.lower(tostring(item)), string.lower(tostring(filter))) then
+                            matchCount = matchCount + 1
                             local isSelected = (item == currentlySelected)
                             local itemBtn = Instance.new("TextButton")
                             itemBtn.Size = UDim2.new(1, -4, 0, 26)
@@ -2312,7 +2329,7 @@ function RaxorHub:Window(GuiConfig)
                             itemBtn.Font = isSelected and Fonts.Title or Fonts.Medium
                             itemBtn.TextSize = 12
                             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
-                            itemBtn.ZIndex = 7002
+                            itemBtn.ZIndex = 9502
                             itemBtn.BackgroundColor3 = isSelected and Colors.Accent or Colors.CardBg
                             itemBtn.TextColor3 = isSelected and Colors.White or Colors.Text
                             itemBtn.Parent = ItemScroll
@@ -2328,6 +2345,19 @@ function RaxorHub:Window(GuiConfig)
                             end)
                         end
                     end
+                    if matchCount == 0 then
+                        local emptyMsg = Instance.new("TextLabel")
+                        emptyMsg.Name = "EmptyMsg"
+                        emptyMsg.Size = UDim2.new(1, 0, 0, 26)
+                        emptyMsg.BackgroundTransparency = 1
+                        emptyMsg.Text = "No options found"
+                        emptyMsg.Font = Fonts.Regular
+                        emptyMsg.TextSize = 11
+                        emptyMsg.TextColor3 = Colors.MutedText
+                        emptyMsg.TextXAlignment = Enum.TextXAlignment.Center
+                        emptyMsg.ZIndex = 9502
+                        emptyMsg.Parent = ItemScroll
+                    end
                 end
 
                 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -2339,6 +2369,7 @@ function RaxorHub:Window(GuiConfig)
                 function dropdownFunc:Refresh(newList)
                     Config.Options = newList
                     Populate("")
+                    UpdateListPosition()
                 end
                 function dropdownFunc:Update(val)
                     Label.Text = tostring(val)
@@ -2455,7 +2486,7 @@ function RaxorHub:Window(GuiConfig)
                 SearchBox.Font = Fonts.Regular
                 SearchBox.Text = ""
                 SearchBox.TextSize = 11
-                SearchBox.ZIndex = 7001
+                SearchBox.ZIndex = 9501
                 SearchBox.Parent = List
                 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 4)
                 AddStroke(SearchBox, Colors.Border, 1)
@@ -2467,7 +2498,7 @@ function RaxorHub:Window(GuiConfig)
                 ItemScroll.BorderSizePixel = 0
                 ItemScroll.ScrollBarThickness = 2
                 ItemScroll.ScrollBarImageColor3 = Colors.Accent
-                ItemScroll.ZIndex = 7001
+                ItemScroll.ZIndex = 9501
                 ItemScroll.Parent = List
 
                 local ListLayout = Instance.new("UIListLayout", ItemScroll)
@@ -2499,7 +2530,11 @@ function RaxorHub:Window(GuiConfig)
                             return
                         end
                         local absPos = Frame.AbsolutePosition
-                        local contentHeight = ListLayout.AbsoluteContentSize.Y
+                        local count = 0
+                        for _, child in pairs(ItemScroll:GetChildren()) do
+                            if child:IsA("TextButton") then count = count + 1 end
+                        end
+                        local contentHeight = math.max(ListLayout.AbsoluteContentSize.Y, count * 28)
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
                         local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
                         List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
@@ -2515,17 +2550,19 @@ function RaxorHub:Window(GuiConfig)
 
                 local function Populate(filter)
                     for _, child in pairs(ItemScroll:GetChildren()) do
-                        if child:IsA("TextButton") then child:Destroy() end
+                        if child:IsA("TextButton") or child.Name == "EmptyMsg" then child:Destroy() end
                     end
+                    local matchCount = 0
                     for _, item in pairs(Config.Options or {}) do
                         if filter == "" or string.find(string.lower(tostring(item)), string.lower(tostring(filter))) then
+                            matchCount = matchCount + 1
                             local isSelected = (type(selectedItems) == "table" and table.find(selectedItems, item))
                             local itemBtn = Instance.new("TextButton")
                             itemBtn.Size = UDim2.new(1, -4, 0, 26)
                             itemBtn.BorderSizePixel = 0
                             itemBtn.AutoButtonColor = false
                             itemBtn.Text = ""
-                            itemBtn.ZIndex = 7002
+                            itemBtn.ZIndex = 9502
                             itemBtn.BackgroundColor3 = isSelected and Colors.CardActive or Colors.CardBg
                             itemBtn.Parent = ItemScroll
                             Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 4)
@@ -2537,7 +2574,7 @@ function RaxorHub:Window(GuiConfig)
                             checkIcon.ImageColor3 = Colors.Accent
                             checkIcon.BackgroundTransparency = 1
                             checkIcon.Visible = isSelected and true or false
-                            checkIcon.ZIndex = 7003
+                            checkIcon.ZIndex = 9503
                             checkIcon.Parent = itemBtn
 
                             local tText = Instance.new("TextLabel")
@@ -2549,7 +2586,7 @@ function RaxorHub:Window(GuiConfig)
                             tText.TextColor3 = isSelected and Colors.White or Colors.Text
                             tText.TextXAlignment = Enum.TextXAlignment.Left
                             tText.BackgroundTransparency = 1
-                            tText.ZIndex = 7003
+                            tText.ZIndex = 9503
                             tText.Parent = itemBtn
 
                             itemBtn.MouseButton1Click:Connect(function()
@@ -2574,12 +2611,39 @@ function RaxorHub:Window(GuiConfig)
                             end)
                         end
                     end
+                    if matchCount == 0 then
+                        local emptyMsg = Instance.new("TextLabel")
+                        emptyMsg.Name = "EmptyMsg"
+                        emptyMsg.Size = UDim2.new(1, 0, 0, 26)
+                        emptyMsg.BackgroundTransparency = 1
+                        emptyMsg.Text = "No options found"
+                        emptyMsg.Font = Fonts.Regular
+                        emptyMsg.TextSize = 11
+                        emptyMsg.TextColor3 = Colors.MutedText
+                        emptyMsg.TextXAlignment = Enum.TextXAlignment.Center
+                        emptyMsg.ZIndex = 9502
+                        emptyMsg.Parent = ItemScroll
+                    end
                 end
 
                 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
                     Populate(SearchBox.Text)
                     UpdateListPosition()
                 end)
+
+                local multiFunc = {}
+                function multiFunc:Refresh(newList)
+                    Config.Options = newList
+                    Populate("")
+                    UpdateListPosition()
+                end
+                function multiFunc:Set(vals)
+                    selectedItems = vals or {}
+                    UpdateLabel()
+                    UpdateState(Config.ID, selectedItems)
+                    Populate("")
+                    if Config.Callback then Config.Callback(selectedItems) end
+                end
 
                 if Config.ID and RaxorHub.Objects then
                     RaxorHub.Objects[Config.ID] = {
@@ -2613,6 +2677,8 @@ function RaxorHub:Window(GuiConfig)
                         activeDropdownSync = RunService.RenderStepped:Connect(UpdateListPosition)
                     end
                 end)
+
+                return multiFunc
             end
 
             -- [[ Color Picker Control (Blade Modern Full HSV Color Picker) ]]
