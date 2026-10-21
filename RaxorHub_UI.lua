@@ -2,7 +2,7 @@
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
     ║                           PC & Mobile                              ║
-    ║                         Version: v2.1.5                            ║
+    ║                         Version: v2.1.6                            ║
     ║                           By : Pigalo                              ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -18,7 +18,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.5"
+local UI_VERSION = "v2.1.6"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -1924,68 +1924,45 @@ function RaxorHub:Window(GuiConfig)
             local hasDesc = Description and Description ~= ""
 
             -- Header Container (Centered Prominent Section Divider)
-            local HeaderHeight = hasDesc and 38 or 28
+            local HeaderHeight = hasDesc and 40 or 28
             local HeaderContainer = Instance.new("Frame")
             HeaderContainer.Name = "HeaderContainer"
             HeaderContainer.Size = UDim2.new(1, -4, 0, HeaderHeight)
-            HeaderContainer.BackgroundColor3 = Color3.fromRGB(28, 24, 40)
-            HeaderContainer.BackgroundTransparency = 0.25
+            HeaderContainer.BackgroundColor3 = Color3.fromRGB(24, 20, 36)
+            HeaderContainer.BackgroundTransparency = 0.35
             HeaderContainer.BorderSizePixel = 0
             HeaderContainer.ZIndex = 28
             HeaderContainer.Parent = SectionFrame
             Instance.new("UICorner", HeaderContainer).CornerRadius = UDim.new(0, 8)
             local stroke = AddStroke(HeaderContainer, Colors.Accent, 1)
-            stroke.Transparency = 0.45
+            stroke.Transparency = 0.65
 
-            -- Left decorative accent gradient line
-            local LeftLine = Instance.new("Frame")
-            LeftLine.Name = "LeftLine"
-            LeftLine.Size = UDim2.new(0.24, 0, 0, 1)
-            LeftLine.Position = UDim2.new(0, 12, hasDesc and 0.36 or 0.5, 0)
-            LeftLine.AnchorPoint = Vector2.new(0, 0.5)
-            LeftLine.BackgroundColor3 = Colors.Accent
-            LeftLine.BorderSizePixel = 0
-            LeftLine.ZIndex = 29
-            LeftLine.Parent = HeaderContainer
+            -- Title Row: Holds LeftLine, Center Title (with optional Icon), and RightLine all on the EXACT same vertical center
+            local TitleRow = Instance.new("Frame")
+            TitleRow.Name = "TitleRow"
+            TitleRow.Size = UDim2.new(1, -20, 0, 18)
+            TitleRow.Position = hasDesc and UDim2.new(0.5, 0, 0, 5) or UDim2.new(0.5, 0, 0.5, 0)
+            TitleRow.AnchorPoint = hasDesc and Vector2.new(0.5, 0) or Vector2.new(0.5, 0.5)
+            TitleRow.BackgroundTransparency = 1
+            TitleRow.ZIndex = 29
+            TitleRow.Parent = HeaderContainer
 
-            local leftGrad = Instance.new("UIGradient", LeftLine)
-            leftGrad.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 0.9),
-                NumberSequenceKeypoint.new(1, 0.1)
-            })
+            -- Center Title Block (Icon + Title centered)
+            local CenterBlock = Instance.new("Frame")
+            CenterBlock.Name = "CenterBlock"
+            CenterBlock.Size = UDim2.new(0, 0, 1, 0)
+            CenterBlock.AutomaticSize = Enum.AutomaticSize.X
+            CenterBlock.Position = UDim2.new(0.5, 0, 0.5, 0)
+            CenterBlock.AnchorPoint = Vector2.new(0.5, 0.5)
+            CenterBlock.BackgroundTransparency = 1
+            CenterBlock.ZIndex = 30
+            CenterBlock.Parent = TitleRow
 
-            -- Right decorative accent gradient line
-            local RightLine = Instance.new("Frame")
-            RightLine.Name = "RightLine"
-            RightLine.Size = UDim2.new(0.24, 0, 0, 1)
-            RightLine.Position = UDim2.new(1, -12, hasDesc and 0.36 or 0.5, 0)
-            RightLine.AnchorPoint = Vector2.new(1, 0.5)
-            RightLine.BackgroundColor3 = Colors.Accent
-            RightLine.BorderSizePixel = 0
-            RightLine.ZIndex = 29
-            RightLine.Parent = HeaderContainer
-
-            local rightGrad = Instance.new("UIGradient", RightLine)
-            rightGrad.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 0.1),
-                NumberSequenceKeypoint.new(1, 0.9)
-            })
-
-            -- Center Title Frame (holds optional icon + title centered)
-            local TitleFrame = Instance.new("Frame")
-            TitleFrame.Name = "TitleFrame"
-            TitleFrame.Size = UDim2.new(1, -24, 0, 18)
-            TitleFrame.Position = hasDesc and UDim2.new(0.5, 0, 0, 4) or UDim2.new(0.5, 0, 0.5, -9)
-            TitleFrame.AnchorPoint = Vector2.new(0.5, 0)
-            TitleFrame.BackgroundTransparency = 1
-            TitleFrame.ZIndex = 29
-            TitleFrame.Parent = HeaderContainer
-
-            local titleLayout = Instance.new("UIListLayout", TitleFrame)
-            titleLayout.FillDirection = Enum.FillDirection.Horizontal
-            titleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-            titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-            titleLayout.Padding = UDim.new(0, 6)
+            local centerLayout = Instance.new("UIListLayout", CenterBlock)
+            centerLayout.FillDirection = Enum.FillDirection.Horizontal
+            centerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            centerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+            centerLayout.Padding = UDim.new(0, 6)
 
             if IconID then
                 local SecIcon = Instance.new("ImageLabel")
@@ -1993,8 +1970,8 @@ function RaxorHub:Window(GuiConfig)
                 SecIcon.Image = ResolveIcon(IconID)
                 SecIcon.BackgroundTransparency = 1
                 SecIcon.ImageColor3 = Colors.AccentHover
-                SecIcon.ZIndex = 30
-                SecIcon.Parent = TitleFrame
+                SecIcon.ZIndex = 31
+                SecIcon.Parent = CenterBlock
             end
 
             local HeaderTitle = Instance.new("TextLabel")
@@ -2007,14 +1984,69 @@ function RaxorHub:Window(GuiConfig)
             HeaderTitle.TextColor3 = Colors.AccentHover
             HeaderTitle.TextXAlignment = Enum.TextXAlignment.Center
             HeaderTitle.BackgroundTransparency = 1
-            HeaderTitle.ZIndex = 30
-            HeaderTitle.Parent = TitleFrame
+            HeaderTitle.ZIndex = 31
+            HeaderTitle.Parent = CenterBlock
+
+            -- Left decorative accent gradient line (Flanks title from left edge to title)
+            local LeftLine = Instance.new("Frame")
+            LeftLine.Name = "LeftLine"
+            LeftLine.Size = UDim2.new(0.24, 0, 0, 1)
+            LeftLine.Position = UDim2.new(0, 0, 0.5, 0)
+            LeftLine.AnchorPoint = Vector2.new(0, 0.5)
+            LeftLine.BackgroundColor3 = Colors.Accent
+            LeftLine.BorderSizePixel = 0
+            LeftLine.ZIndex = 29
+            LeftLine.Parent = TitleRow
+
+            local leftGrad = Instance.new("UIGradient", LeftLine)
+            leftGrad.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0.85),
+                NumberSequenceKeypoint.new(1, 0.05)
+            })
+
+            -- Right decorative accent gradient line (Flanks title from title to right edge)
+            local RightLine = Instance.new("Frame")
+            RightLine.Name = "RightLine"
+            RightLine.Size = UDim2.new(0.24, 0, 0, 1)
+            RightLine.Position = UDim2.new(1, 0, 0.5, 0)
+            RightLine.AnchorPoint = Vector2.new(1, 0.5)
+            RightLine.BackgroundColor3 = Colors.Accent
+            RightLine.BorderSizePixel = 0
+            RightLine.ZIndex = 29
+            RightLine.Parent = TitleRow
+
+            local rightGrad = Instance.new("UIGradient", RightLine)
+            rightGrad.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0.05),
+                NumberSequenceKeypoint.new(1, 0.85)
+            })
+
+            -- Dynamic line length adjustment so lines directly connect with the center title with 10px margin
+            local function UpdateLineGeometry()
+                local rowW = TitleRow.AbsoluteSize.X
+                local centerW = CenterBlock.AbsoluteSize.X
+                if centerW <= 0 then
+                    local TextService = game:GetService("TextService")
+                    local sz = TextService:GetTextSize(tostring(Title), 13, Fonts.Title, Vector2.new(1000, 1000))
+                    centerW = sz.X + (IconID and 22 or 0)
+                end
+                if rowW > 0 and centerW > 0 then
+                    local halfW = math.ceil(centerW / 2)
+                    local lineLen = math.max(12, math.floor((rowW / 2) - halfW - 10))
+                    LeftLine.Size = UDim2.new(0, lineLen, 0, 1)
+                    RightLine.Size = UDim2.new(0, lineLen, 0, 1)
+                end
+            end
+
+            CenterBlock:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateLineGeometry)
+            TitleRow:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateLineGeometry)
+            task.defer(UpdateLineGeometry)
 
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
                 Desc.Name = "HeaderDesc"
                 Desc.Size = UDim2.new(1, -20, 0, 14)
-                Desc.Position = UDim2.new(0.5, 0, 0, 22)
+                Desc.Position = UDim2.new(0.5, 0, 0, 24)
                 Desc.AnchorPoint = Vector2.new(0.5, 0)
                 Desc.Text = tostring(Description)
                 Desc.Font = Fonts.Medium
