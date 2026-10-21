@@ -5186,96 +5186,64 @@ local function StartServerAutoRoll()
     if isPausedWaitingBuy then return false end
 
     local rollControls = GetRollControls()
-    local stand = GetPlayerRollStand("Monsters")
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not rollControls then return false end
 
-    -- 1. Configure settings for server auto roll:
+    -- 1. Configure settings for server auto roll (native RollControls)
     pcall(function()
-        if rollControls then
-            local targetR = "Divine"
-            if type(State.RollTargetRarities) == "table" and #State.RollTargetRarities > 0 then
-                for _, r in ipairs(State.RollTargetRarities) do
-                    if r == "Divine" or r == "Mythic" or r == "Legendary" then
-                        targetR = r
-                        break
-                    end
+        local targetR = "Divine"
+        if type(State.RollTargetRarities) == "table" and #State.RollTargetRarities > 0 then
+            for _, r in ipairs(State.RollTargetRarities) do
+                if r == "Divine" or r == "Mythic" or r == "Legendary" then
+                    targetR = r
+                    break
                 end
             end
-
-            local targetM = "Off"
-            if type(State.RollTargetMutations) == "table" then
-                for _, m in ipairs(State.RollTargetMutations) do
-                    if m == "Cursed" or m == "Infernal" or m == "Frozen" or m == "Golden" then
-                        targetM = m
-                        break
-                    end
-                end
-            end
-
-            local settings = {
-                rarity = targetR,
-                mut = targetM,
-                pity = "On",
-                skin = "Off",
-                always = "Divine",
-                protect = "Mythic",
-                category = "All"
-            }
-            rollControls:InvokeServer("settings", "Monsters", settings)
         end
+
+        local targetM = "Off"
+        if type(State.RollTargetMutations) == "table" then
+            for _, m in ipairs(State.RollTargetMutations) do
+                if m == "Cursed" or m == "Infernal" or m == "Frozen" or m == "Golden" then
+                    targetM = m
+                    break
+                end
+            end
+        end
+
+        local settings = {
+            rarity = targetR,
+            mut = targetM,
+            pity = "On",
+            skin = "Off",
+            always = "Divine",
+            protect = "Mythic",
+            category = "All"
+        }
+        rollControls:InvokeServer("settings", "Monsters", settings)
     end)
 
-    -- 2. Try starting server auto roll directly:
-    local started = false
-    if rollControls then
-        local success, res = pcall(function()
-            return rollControls:InvokeServer("start", "Monsters")
-        end)
-        if success and res and res.ok then
-            started = true
-            isServerAutoActive = true
+    task.wait(0.12)
+
+    -- 2. Directly start the game's built-in Auto Roll (100% native, zero teleportation)
+    local success, res = pcall(function()
+        return rollControls:InvokeServer("start", "Monsters")
+    end)
+
+    if success and res and res.ok then
+        isServerAutoActive = true
+        return true
+    else
+        isServerAutoActive = false
+        if res and res.msg then
+            RaxorHub:Notify({
+                Title = "Game Auto Roll",
+                Content = tostring(res.msg),
+                Duration = 2.5
+            })
         end
     end
 
-    -- If server start was rejected (likely player > 40 studs from plot roller stand):
-    if not started and stand and hrp then
-        local standPivot = stand:GetPivot()
-        local dist = (standPivot.Position - hrp.Position).Magnitude
-        if dist > 35 then
-            local oldCF = hrp.CFrame
-            pcall(function()
-                hrp.CFrame = standPivot + Vector3.new(0, 3, 0)
-            end)
-            task.wait(0.06)
-            if rollControls then
-                pcall(function()
-                    local res = rollControls:InvokeServer("start", "Monsters")
-                    if res and res.ok then
-                        started = true
-                        isServerAutoActive = true
-                    end
-                end)
-            end
-            pcall(function()
-                hrp.CFrame = oldCF
-            end)
-        end
-    end
-
-    -- 3. Prompt trigger fallback to ensure roll starts immediately
-    if stand then
-        local rollButton = stand:FindFirstChild("RollButton")
-        local rollPrompt = rollButton and rollButton:FindFirstChild("RollPrompt")
-        if rollPrompt and rollPrompt:IsA("ProximityPrompt") then
-            pcall(function()
-                fireproximityprompt(rollPrompt, 0)
-                fireproximityprompt(rollPrompt)
-            end)
-        end
-    end
-
-    return started
+    return false
 end
 
 local function StopServerAutoRoll()
@@ -5416,27 +5384,9 @@ local function BuyRollSlot(slotIndex, stand, targetName)
                 pcall(function() fireproximityprompt(buyPrompt) end)
             end
 
-            if hrp and displayPart:IsA("BasePart") then
-                local dist = (hrp.Position - displayPart.Position).Magnitude
-                if dist <= 14 then
-                    -- Already near the stand: Fire immediately without moving!
-                    FirePrompt()
-                    task.wait(0.04)
-                    FirePrompt()
-                else
-                    -- Far away: Brief 0.08s step to stand to satisfy Roblox server distance check (11 studs), buy, then return!
-                    local oldCF = hrp.CFrame
-                    hrp.CFrame = CFrame.new(displayPart.Position + Vector3.new(0, 2.5, 0), displayPart.Position)
-                    task.wait(0.08)
-                    FirePrompt()
-                    task.wait(0.08)
-                    FirePrompt()
-                    task.wait(0.08)
-                    hrp.CFrame = oldCF
-                end
-            else
-                FirePrompt()
-            end
+            FirePrompt()
+            task.wait(0.04)
+            FirePrompt()
 
             task.delay(0.25, function()
                 pcall(function()
@@ -5605,32 +5555,13 @@ task.spawn(function()
     end
 end)
 
--- 4. Auto Roll background watchdog & active engine
+-- 4. Auto Roll background watchdog (Keeps game's native Auto Roll active)
 task.spawn(function()
     while true do
-        task.wait(0.5)
+        task.wait(1.0)
         if State.AutoRoll and not isPausedWaitingBuy then
-            local now = tick()
-            -- If no roll results received for more than 1.6 seconds, trigger roll again
-            if now - lastRollResultTime > 1.6 then
+            if not isServerAutoActive or (tick() - lastRollResultTime > 2.5) then
                 StartServerAutoRoll()
-
-                local stand = GetPlayerRollStand("Monsters")
-                local rollButton = stand and stand:FindFirstChild("RollButton")
-                local rollPrompt = rollButton and rollButton:FindFirstChild("RollPrompt")
-                if rollPrompt and rollPrompt:IsA("ProximityPrompt") then
-                    pcall(function()
-                        fireproximityprompt(rollPrompt, 0)
-                        fireproximityprompt(rollPrompt)
-                    end)
-                end
-
-                pcall(function()
-                    local rollRemote = GetRollRemote()
-                    if rollRemote then
-                        rollRemote:FireServer("confirmRoll", "Monsters")
-                    end
-                end)
             end
         end
     end
@@ -5845,6 +5776,21 @@ local LobbyTab = Window:AddTab({
 local RollSec = LobbyTab:AddSection("Auto Roll", "ระบบสุ่มมอนสเตอร์และกลายพันธุ์")
 
 RollStatusLabel = RollSec:AddLabel("สถานะ: พร้อมใช้งาน (ยังไม่ได้สุ่ม)")
+
+RollSec:AddButton({
+    Title = "Open Game RollPad",
+    Description = "เปิดหน้าต่างตั้งค่า Auto Roll ของตัวเกมโดยตรง",
+    ButtonText = "Open RollPad",
+    Callback = function()
+        pcall(function()
+            local client = LocalPlayer:FindFirstChild("PlayerScripts") and (LocalPlayer.PlayerScripts:FindFirstChild("BADClient") or LocalPlayer.PlayerScripts:FindFirstChild("Client"))
+            local rollPad = client and client:FindFirstChild("RollPadUI")
+            if rollPad and rollPad:IsA("ModuleScript") then
+                require(rollPad).Open("Monsters")
+            end
+        end)
+    end
+})
 
 RollSec:AddToggleSwitch({
     Title = "Auto Roll",
