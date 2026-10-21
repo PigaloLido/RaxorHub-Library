@@ -2,7 +2,7 @@
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
     ║                           PC & Mobile                              ║
-    ║                         Version: v2.1.3                            ║
+    ║                         Version: v2.1.4                            ║
     ║                           By : Pigalo                              ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -18,7 +18,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.3"
+local UI_VERSION = "v2.1.4"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -833,7 +833,7 @@ function RaxorHub:Window(GuiConfig)
     MainFrame.Position = UDim2.new(0.5, -frameW / 2, 0.5, -frameH / 2)
     MainFrame.BackgroundColor3 = Colors.WindowBg
     MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true
+    MainFrame.ClipsDescendants = false
     MainFrame.ZIndex = 10
     MainFrame.Parent = ScreenGui
 
@@ -2251,7 +2251,7 @@ function RaxorHub:Window(GuiConfig)
                 List.ZIndex = 9500
                 List.Visible = false
                 List.ClipsDescendants = true
-                List.Parent = ScreenGui
+                List.Parent = MainFrame
                 Instance.new("UICorner", List).CornerRadius = UDim.new(0, 6)
                 AddStroke(List, Colors.BorderFocus, 1)
 
@@ -2294,6 +2294,17 @@ function RaxorHub:Window(GuiConfig)
                             return
                         end
                         local absPos = Frame.AbsolutePosition
+                        local mainPos = MainFrame.AbsolutePosition
+                        local relX = absPos.X - mainPos.X
+                        local relY = absPos.Y - mainPos.Y
+
+                        local contentTop = ContentContainer.AbsolutePosition.Y
+                        local contentBottom = contentTop + ContentContainer.AbsoluteSize.Y
+                        if absPos.Y + Frame.AbsoluteSize.Y < contentTop or absPos.Y > contentBottom then
+                            CloseAllDropdowns()
+                            return
+                        end
+
                         local count = 0
                         for _, child in pairs(ItemScroll:GetChildren()) do
                             if child:IsA("TextButton") then count = count + 1 end
@@ -2301,14 +2312,9 @@ function RaxorHub:Window(GuiConfig)
                         local contentHeight = math.max(ItemListLayout.AbsoluteContentSize.Y, count * 28)
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
                         local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
-                        List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
 
-                        local screenH = ScreenGui.AbsoluteSize.Y
-                        if absPos.Y + Frame.AbsoluteSize.Y + dynamicHeight + 10 > screenH then
-                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y - dynamicHeight - 3)
-                        else
-                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y + Frame.AbsoluteSize.Y + 3)
-                        end
+                        List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
+                        List.Position = UDim2.new(0, relX, 0, relY + Frame.AbsoluteSize.Y + 2)
                     end
                 end
 
@@ -2472,7 +2478,7 @@ function RaxorHub:Window(GuiConfig)
                 List.ZIndex = 9500
                 List.Visible = false
                 List.ClipsDescendants = true
-                List.Parent = ScreenGui
+                List.Parent = MainFrame
                 Instance.new("UICorner", List).CornerRadius = UDim.new(0, 6)
                 AddStroke(List, Colors.BorderFocus, 1)
 
@@ -2530,6 +2536,17 @@ function RaxorHub:Window(GuiConfig)
                             return
                         end
                         local absPos = Frame.AbsolutePosition
+                        local mainPos = MainFrame.AbsolutePosition
+                        local relX = absPos.X - mainPos.X
+                        local relY = absPos.Y - mainPos.Y
+
+                        local contentTop = ContentContainer.AbsolutePosition.Y
+                        local contentBottom = contentTop + ContentContainer.AbsoluteSize.Y
+                        if absPos.Y + Frame.AbsoluteSize.Y < contentTop or absPos.Y > contentBottom then
+                            CloseAllDropdowns()
+                            return
+                        end
+
                         local count = 0
                         for _, child in pairs(ItemScroll:GetChildren()) do
                             if child:IsA("TextButton") then count = count + 1 end
@@ -2537,14 +2554,9 @@ function RaxorHub:Window(GuiConfig)
                         local contentHeight = math.max(ListLayout.AbsoluteContentSize.Y, count * 28)
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
                         local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
-                        List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
 
-                        local screenH = ScreenGui.AbsoluteSize.Y
-                        if absPos.Y + Frame.AbsoluteSize.Y + dynamicHeight + 10 > screenH then
-                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y - dynamicHeight - 3)
-                        else
-                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y + Frame.AbsoluteSize.Y + 3)
-                        end
+                        List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
+                        List.Position = UDim2.new(0, relX, 0, relY + Frame.AbsoluteSize.Y + 2)
                     end
                 end
 
