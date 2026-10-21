@@ -117,6 +117,8 @@ local RaxorHub = {
 -- Active overlays tracking
 local activeDropdownList = nil
 local activeDropdownArrow = nil
+local activeDropdownFrame = nil
+local activeDropdownSync = nil
 local activeColorPicker = nil
 local MainFrame = nil
 local StartBtn = nil
@@ -236,6 +238,10 @@ local function ResolveIcon(iconInput)
 end
 
 local function CloseAllDropdowns()
+    if activeDropdownSync then
+        pcall(function() activeDropdownSync:Disconnect() end)
+        activeDropdownSync = nil
+    end
     if activeDropdownList then
         activeDropdownList.Visible = false
         activeDropdownList = nil
@@ -248,8 +254,32 @@ local function CloseAllDropdowns()
         activeColorPicker.Visible = false
         activeColorPicker = nil
     end
+    activeDropdownFrame = nil
 end
 RaxorHub.CloseAllDropdowns = CloseAllDropdowns
+
+-- Close dropdown on clicking outside
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if activeDropdownList and activeDropdownList.Visible then
+            local pos = input.Position
+            local listAbsPos = activeDropdownList.AbsolutePosition
+            local listAbsSize = activeDropdownList.AbsoluteSize
+            local inList = (pos.X >= listAbsPos.X and pos.X <= listAbsPos.X + listAbsSize.X and
+                            pos.Y >= listAbsPos.Y and pos.Y <= listAbsPos.Y + listAbsSize.Y)
+            local inBtn = false
+            if activeDropdownFrame then
+                local bPos = activeDropdownFrame.AbsolutePosition
+                local bSize = activeDropdownFrame.AbsoluteSize
+                inBtn = (pos.X >= bPos.X and pos.X <= bPos.X + bSize.X and
+                         pos.Y >= bPos.Y and pos.Y <= bPos.Y + bSize.Y)
+            end
+            if not inList and not inBtn then
+                CloseAllDropdowns()
+            end
+        end
+    end
+end)
 
 -- Fast and lightweight dragging support (PC & Mobile Touch)
 local function MakeDraggable(obj, dragPart)
@@ -349,15 +379,14 @@ local function MakeDraggableStartBtn(obj, dragPart, clickCallback)
             local parentScreen = obj:FindFirstAncestorOfClass("ScreenGui")
             if parentScreen then
                 local screenSize = parentScreen.AbsoluteSize
-                local btnSize = obj.AbsoluteSize
                 local currentX = newPos.X.Offset + (screenSize.X * newPos.X.Scale)
                 local currentY = newPos.Y.Offset + (screenSize.Y * newPos.Y.Scale)
-                local finalX = math.clamp(currentX, 8, math.max(8, screenSize.X - btnSize.X - 8))
-                local finalY = math.clamp(currentY, 8, math.max(8, screenSize.Y - btnSize.Y - 8))
+                local finalX = math.clamp(currentX, 28, math.max(28, screenSize.X - 28))
+                local finalY = math.clamp(currentY, 28, math.max(28, screenSize.Y - 28))
 
                 obj.Position = UDim2.new(0, finalX, 0, finalY)
-                if screenSize.X - btnSize.X > 0 then lastRatioX = finalX / (screenSize.X - btnSize.X) end
-                if screenSize.Y - btnSize.Y > 0 then lastRatioY = finalY / (screenSize.Y - btnSize.Y) end
+                if screenSize.X > 56 then lastRatioX = finalX / screenSize.X end
+                if screenSize.Y > 56 then lastRatioY = finalY / screenSize.Y end
             else
                 obj.Position = newPos
             end
@@ -828,20 +857,61 @@ function RaxorHub:Window(GuiConfig)
     NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
     NotifLayout.Parent = NotificationHolder
 
-    -- Floating Mobile / PC Toggle Button (Using Official RaxorHub Logo)
+    -- Floating Mobile / PC Toggle Button (Clean transparent logo only, with tilt animation)
     StartBtn = Instance.new("ImageButton")
     RaxorHub.StartBtn = StartBtn
     StartBtn.Name = "StartBtn"
-    StartBtn.Size = UDim2.new(0, 48, 0, 48)
-    StartBtn.Position = UDim2.new(0.5, -24, 0.05, 0)
-    StartBtn.BackgroundColor3 = Colors.SidebarBg
+    StartBtn.Size = UDim2.new(0, 52, 0, 52)
+    StartBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+    StartBtn.Position = UDim2.new(0.5, 0, 0.06, 26)
+    StartBtn.BackgroundTransparency = 1
+    StartBtn.BorderSizePixel = 0
     StartBtn.Image = Icons.Logo
     StartBtn.ImageColor3 = Colors.White
     StartBtn.Visible = false
     StartBtn.ZIndex = 8000
     StartBtn.Parent = ScreenGui
-    Instance.new("UICorner", StartBtn).CornerRadius = UDim.new(0, 12)
-    AddStroke(StartBtn, Colors.BorderActive, 1.5)
+
+    local isLogoAnimating = false
+    local function PlayLogoTiltAnimation(callback)
+        if isLogoAnimating then
+            if callback then callback() end
+            return
+        end
+        isLogoAnimating = true
+        -- Cool tilt animation (-16 degrees) with bounce
+        local t1 = Tween(StartBtn, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Rotation = -16,
+            Size = UDim2.new(0, 46, 0, 46)
+        })
+        t1.Completed:Connect(function()
+            local t2 = Tween(StartBtn, TweenInfo.new(0.24, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Rotation = 0,
+                Size = UDim2.new(0, 52, 0, 52)
+            })
+            t2.Completed:Connect(function()
+                isLogoAnimating = false
+                if callback then callback() end
+            end)
+        end)
+    end
+
+    StartBtn.MouseEnter:Connect(function()
+        if not isLogoAnimating then
+            Tween(StartBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Rotation = -6,
+                Size = UDim2.new(0, 56, 0, 56)
+            })
+        end
+    end)
+    StartBtn.MouseLeave:Connect(function()
+        if not isLogoAnimating then
+            Tween(StartBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Rotation = 0,
+                Size = UDim2.new(0, 52, 0, 52)
+            })
+        end
+    end)
 
     local isToggling = false
     local savedFrameSize = UDim2.new(0, frameW, 0, frameH)
@@ -852,11 +922,10 @@ function RaxorHub:Window(GuiConfig)
         if PresetsModal then PresetsModal.Visible = false end
         if MainFrame.Visible then
             savedFrameSize = MainFrame.Size
-            Tween(MainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, MainFrame.AbsoluteSize.X * 0.95, 0, MainFrame.AbsoluteSize.Y * 0.95),
-                BackgroundTransparency = 1
+            local t = Tween(MainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, MainFrame.AbsoluteSize.X * 0.95, 0, MainFrame.AbsoluteSize.Y * 0.95)
             })
-            task.delay(0.18, function()
+            t.Completed:Connect(function()
                 MainFrame.Visible = false
                 MainFrame.Size = savedFrameSize
                 MainFrame.BackgroundTransparency = 0
@@ -867,7 +936,7 @@ function RaxorHub:Window(GuiConfig)
             MainFrame.Visible = true
             StartBtn.Visible = false
             MainFrame.Size = UDim2.new(0, savedFrameSize.X.Offset * 0.95, 0, savedFrameSize.Y.Offset * 0.95)
-            MainFrame.BackgroundTransparency = 0.5
+            MainFrame.BackgroundTransparency = 0
             local t = Tween(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                 Size = savedFrameSize,
                 BackgroundTransparency = 0
@@ -880,7 +949,9 @@ function RaxorHub:Window(GuiConfig)
     RaxorHub.ToggleUI = ToggleUI
 
     MakeDraggableStartBtn(StartBtn, StartBtn, function()
-        ToggleUI()
+        PlayLogoTiltAnimation(function()
+            ToggleUI()
+        end)
     end)
 
     -- [[ Resizer Corner (PC / Touch - Rounded Accent Corner) ]]
@@ -947,9 +1018,11 @@ function RaxorHub:Window(GuiConfig)
 
     -- Logo & Brand Header in Sidebar (RaxorHub Official Logo)
     local BrandContainer = Instance.new("Frame")
+    BrandContainer.Name = "BrandContainer"
     BrandContainer.Size = UDim2.new(1, 0, 0, 50)
     BrandContainer.BackgroundTransparency = 1
     BrandContainer.ZIndex = 22
+    BrandContainer.Active = true
     BrandContainer.Parent = Sidebar
 
     local BrandLogo = Instance.new("ImageLabel")
@@ -958,6 +1031,7 @@ function RaxorHub:Window(GuiConfig)
     BrandLogo.Image = GuiConfig.Logo or Icons.Logo
     BrandLogo.ImageColor3 = Colors.White
     BrandLogo.BackgroundTransparency = 1
+    BrandLogo.Active = false
     BrandLogo.ZIndex = 23
     BrandLogo.Parent = BrandContainer
 
@@ -970,6 +1044,7 @@ function RaxorHub:Window(GuiConfig)
     BrandTitle.Size = UDim2.new(1, -52, 0, 18)
     BrandTitle.TextXAlignment = Enum.TextXAlignment.Left
     BrandTitle.BackgroundTransparency = 1
+    BrandTitle.Active = false
     BrandTitle.ZIndex = 23
     BrandTitle.Parent = BrandContainer
 
@@ -1051,13 +1126,28 @@ function RaxorHub:Window(GuiConfig)
     ProfileStatus.Parent = ProfileCard
 
     -- [[ Top Bar Area (Fixed overlapping: Search on Left, Controls on Right) ]]
+    -- Dedicated Full-Top Drag Area (entire top width except 145px for top-right control buttons)
+    local TopDragZone = Instance.new("Frame")
+    TopDragZone.Name = "TopDragZone"
+    TopDragZone.Size = UDim2.new(1, -145, 0, 50)
+    TopDragZone.Position = UDim2.new(0, 0, 0, 0)
+    TopDragZone.BackgroundTransparency = 1
+    TopDragZone.ZIndex = 34
+    TopDragZone.Active = true
+    TopDragZone.Parent = MainFrame
+
+    MakeDraggable(MainFrame, TopDragZone)
+    MakeDraggable(MainFrame, BrandContainer)
+
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Size = UDim2.new(1, -SidebarWidth, 0, 48)
     TopBar.Position = UDim2.new(0, SidebarWidth, 0, 0)
-    TopBar.BackgroundTransparency = 1
+    TopBar.BackgroundColor3 = Colors.TopBarBg
+    TopBar.BackgroundTransparency = 0
     TopBar.BorderSizePixel = 0
     TopBar.ZIndex = 30
+    TopBar.Active = true
     TopBar.Parent = MainFrame
 
     MakeDraggable(MainFrame, TopBar)
@@ -2147,10 +2237,10 @@ function RaxorHub:Window(GuiConfig)
                 local List = Instance.new("Frame")
                 List.Name = "DropdownList"
                 List.BackgroundColor3 = Colors.DropdownBg
-                List.ZIndex = 7000
+                List.ZIndex = 9500
                 List.Visible = false
                 List.ClipsDescendants = true
-                List.Parent = MainFrame
+                List.Parent = ScreenGui
                 Instance.new("UICorner", List).CornerRadius = UDim.new(0, 6)
                 AddStroke(List, Colors.BorderFocus, 1)
 
@@ -2188,13 +2278,22 @@ function RaxorHub:Window(GuiConfig)
 
                 local function UpdateListPosition()
                     if List.Visible then
+                        if not MainFrame.Visible or not Frame.Visible then
+                            CloseAllDropdowns()
+                            return
+                        end
                         local absPos = Frame.AbsolutePosition
-                        local mainAbsPos = MainFrame.AbsolutePosition
                         local contentHeight = ItemListLayout.AbsoluteContentSize.Y
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
-                        local dynamicHeight = math.clamp(contentHeight + 42, 70, 180)
+                        local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
                         List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
-                        List.Position = UDim2.new(0, absPos.X - mainAbsPos.X, 0, absPos.Y - mainAbsPos.Y + Frame.AbsoluteSize.Y + 3)
+
+                        local screenH = ScreenGui.AbsoluteSize.Y
+                        if absPos.Y + Frame.AbsoluteSize.Y + dynamicHeight + 10 > screenH then
+                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y - dynamicHeight - 3)
+                        else
+                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y + Frame.AbsoluteSize.Y + 3)
+                        end
                     end
                 end
 
@@ -2267,19 +2366,18 @@ function RaxorHub:Window(GuiConfig)
                 DropdownClickBtn.MouseButton1Click:Connect(function()
                     if List.Visible then
                         CloseAllDropdowns()
-                        if syncConnection then syncConnection:Disconnect() end
                     else
                         CloseAllDropdowns()
                         List.Visible = true
                         activeDropdownList = List
                         activeDropdownArrow = ArrowIcon
+                        activeDropdownFrame = Frame
                         Tween(ArrowIcon, TweenInfo.new(0.15), {Rotation = 180})
                         ItemScroll.CanvasPosition = Vector2.new(0, 0)
                         SearchBox.Text = ""
                         Populate("")
                         UpdateListPosition()
-                        if syncConnection then syncConnection:Disconnect() end
-                        syncConnection = RunService.RenderStepped:Connect(UpdateListPosition)
+                        activeDropdownSync = RunService.RenderStepped:Connect(UpdateListPosition)
                     end
                 end)
 
@@ -2340,10 +2438,10 @@ function RaxorHub:Window(GuiConfig)
                 local List = Instance.new("Frame")
                 List.Name = "MultiSelectList"
                 List.BackgroundColor3 = Colors.DropdownBg
-                List.ZIndex = 7000
+                List.ZIndex = 9500
                 List.Visible = false
                 List.ClipsDescendants = true
-                List.Parent = MainFrame
+                List.Parent = ScreenGui
                 Instance.new("UICorner", List).CornerRadius = UDim.new(0, 6)
                 AddStroke(List, Colors.BorderFocus, 1)
 
@@ -2396,13 +2494,22 @@ function RaxorHub:Window(GuiConfig)
 
                 local function UpdateListPosition()
                     if List.Visible then
+                        if not MainFrame.Visible or not Frame.Visible then
+                            CloseAllDropdowns()
+                            return
+                        end
                         local absPos = Frame.AbsolutePosition
-                        local mainAbsPos = MainFrame.AbsolutePosition
                         local contentHeight = ListLayout.AbsoluteContentSize.Y
                         ItemScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 4)
-                        local dynamicHeight = math.clamp(contentHeight + 42, 70, 180)
+                        local dynamicHeight = math.clamp(contentHeight + 42, 70, 200)
                         List.Size = UDim2.new(0, Frame.AbsoluteSize.X, 0, dynamicHeight)
-                        List.Position = UDim2.new(0, absPos.X - mainAbsPos.X, 0, absPos.Y - mainAbsPos.Y + Frame.AbsoluteSize.Y + 3)
+
+                        local screenH = ScreenGui.AbsoluteSize.Y
+                        if absPos.Y + Frame.AbsoluteSize.Y + dynamicHeight + 10 > screenH then
+                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y - dynamicHeight - 3)
+                        else
+                            List.Position = UDim2.new(0, absPos.X, 0, absPos.Y + Frame.AbsoluteSize.Y + 3)
+                        end
                     end
                 end
 
@@ -2492,19 +2599,18 @@ function RaxorHub:Window(GuiConfig)
                 MultiClickBtn.MouseButton1Click:Connect(function()
                     if List.Visible then
                         CloseAllDropdowns()
-                        if syncConnection then syncConnection:Disconnect() end
                     else
                         CloseAllDropdowns()
                         List.Visible = true
                         activeDropdownList = List
                         activeDropdownArrow = ArrowIcon
+                        activeDropdownFrame = Frame
                         Tween(ArrowIcon, TweenInfo.new(0.15), {Rotation = 180})
                         ItemScroll.CanvasPosition = Vector2.new(0, 0)
                         SearchBox.Text = ""
                         Populate("")
                         UpdateListPosition()
-                        if syncConnection then syncConnection:Disconnect() end
-                        syncConnection = RunService.RenderStepped:Connect(UpdateListPosition)
+                        activeDropdownSync = RunService.RenderStepped:Connect(UpdateListPosition)
                     end
                 end)
             end
