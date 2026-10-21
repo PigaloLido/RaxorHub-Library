@@ -2,7 +2,7 @@
     ╔════════════════════════════════════════════════════════════════════╗
     ║                           RAXORHUB UI                              ║
     ║                           PC & Mobile                              ║
-    ║                         Version: v2.1.4                            ║
+    ║                         Version: v2.1.5                            ║
     ║                           By : Pigalo                              ║
     ╚════════════════════════════════════════════════════════════════════╝
 ]]
@@ -18,7 +18,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local UI_NAME = "RaxorHub_UI"
 local UI_TITLE = "RAXOR"
 local UI_CREDIT = "By : Pigalo"
-local UI_VERSION = "v2.1.4"
+local UI_VERSION = "v2.1.5"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -1837,18 +1837,29 @@ function RaxorHub:Window(GuiConfig)
         -- Breadcrumb Header inside Page (Matches Blade Image 1 & 4!)
         local BreadcrumbRow = Instance.new("Frame")
         BreadcrumbRow.Name = "BreadcrumbRow"
-        BreadcrumbRow.Size = UDim2.new(1, -4, 0, 22)
+        BreadcrumbRow.Size = UDim2.new(1, -4, 0, 24)
         BreadcrumbRow.BackgroundTransparency = 1
         BreadcrumbRow.LayoutOrder = -100
         BreadcrumbRow.ZIndex = 27
         BreadcrumbRow.Parent = Page
 
+        local BreadcrumbTag = Instance.new("Frame")
+        BreadcrumbTag.Name = "BreadcrumbTag"
+        BreadcrumbTag.Size = UDim2.new(0, 3, 0, 14)
+        BreadcrumbTag.Position = UDim2.new(0, 4, 0.5, -7)
+        BreadcrumbTag.BackgroundColor3 = Colors.Accent
+        BreadcrumbTag.BorderSizePixel = 0
+        BreadcrumbTag.ZIndex = 28
+        BreadcrumbTag.Parent = BreadcrumbRow
+        Instance.new("UICorner", BreadcrumbTag).CornerRadius = UDim.new(1, 0)
+
         local BreadcrumbLabel = Instance.new("TextLabel")
-        BreadcrumbLabel.Size = UDim2.new(1, 0, 1, 0)
+        BreadcrumbLabel.Size = UDim2.new(1, -18, 1, 0)
+        BreadcrumbLabel.Position = UDim2.new(0, 14, 0, 0)
         BreadcrumbLabel.Text = TabConfig.Name
         BreadcrumbLabel.Font = Fonts.Title
-        BreadcrumbLabel.TextSize = 14
-        BreadcrumbLabel.TextColor3 = Colors.SubText
+        BreadcrumbLabel.TextSize = 15
+        BreadcrumbLabel.TextColor3 = Colors.White
         BreadcrumbLabel.TextXAlignment = Enum.TextXAlignment.Left
         BreadcrumbLabel.BackgroundTransparency = 1
         BreadcrumbLabel.ZIndex = 28
@@ -1911,57 +1922,112 @@ function RaxorHub:Window(GuiConfig)
             SectionLayout.Parent = SectionFrame
 
             local hasDesc = Description and Description ~= ""
-            local xPos = IconID and 34 or 12
 
-            -- Header Container
+            -- Header Container (Centered Prominent Section Divider)
+            local HeaderHeight = hasDesc and 38 or 28
             local HeaderContainer = Instance.new("Frame")
-            HeaderContainer.Size = hasDesc and SizeItem.TitleItem or UDim2.new(1, -4, 0, 36)
-            HeaderContainer.BackgroundColor3 = Colors.SectionHeaderBg
+            HeaderContainer.Name = "HeaderContainer"
+            HeaderContainer.Size = UDim2.new(1, -4, 0, HeaderHeight)
+            HeaderContainer.BackgroundColor3 = Color3.fromRGB(28, 24, 40)
+            HeaderContainer.BackgroundTransparency = 0.25
             HeaderContainer.BorderSizePixel = 0
             HeaderContainer.ZIndex = 28
             HeaderContainer.Parent = SectionFrame
-            Instance.new("UICorner", HeaderContainer).CornerRadius = UDim.new(0, 6)
-            AddStroke(HeaderContainer, Colors.Border, 1)
+            Instance.new("UICorner", HeaderContainer).CornerRadius = UDim.new(0, 8)
+            local stroke = AddStroke(HeaderContainer, Colors.Accent, 1)
+            stroke.Transparency = 0.45
+
+            -- Left decorative accent gradient line
+            local LeftLine = Instance.new("Frame")
+            LeftLine.Name = "LeftLine"
+            LeftLine.Size = UDim2.new(0.24, 0, 0, 1)
+            LeftLine.Position = UDim2.new(0, 12, hasDesc and 0.36 or 0.5, 0)
+            LeftLine.AnchorPoint = Vector2.new(0, 0.5)
+            LeftLine.BackgroundColor3 = Colors.Accent
+            LeftLine.BorderSizePixel = 0
+            LeftLine.ZIndex = 29
+            LeftLine.Parent = HeaderContainer
+
+            local leftGrad = Instance.new("UIGradient", LeftLine)
+            leftGrad.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0.9),
+                NumberSequenceKeypoint.new(1, 0.1)
+            })
+
+            -- Right decorative accent gradient line
+            local RightLine = Instance.new("Frame")
+            RightLine.Name = "RightLine"
+            RightLine.Size = UDim2.new(0.24, 0, 0, 1)
+            RightLine.Position = UDim2.new(1, -12, hasDesc and 0.36 or 0.5, 0)
+            RightLine.AnchorPoint = Vector2.new(1, 0.5)
+            RightLine.BackgroundColor3 = Colors.Accent
+            RightLine.BorderSizePixel = 0
+            RightLine.ZIndex = 29
+            RightLine.Parent = HeaderContainer
+
+            local rightGrad = Instance.new("UIGradient", RightLine)
+            rightGrad.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0.1),
+                NumberSequenceKeypoint.new(1, 0.9)
+            })
+
+            -- Center Title Frame (holds optional icon + title centered)
+            local TitleFrame = Instance.new("Frame")
+            TitleFrame.Name = "TitleFrame"
+            TitleFrame.Size = UDim2.new(1, -24, 0, 18)
+            TitleFrame.Position = hasDesc and UDim2.new(0.5, 0, 0, 4) or UDim2.new(0.5, 0, 0.5, -9)
+            TitleFrame.AnchorPoint = Vector2.new(0.5, 0)
+            TitleFrame.BackgroundTransparency = 1
+            TitleFrame.ZIndex = 29
+            TitleFrame.Parent = HeaderContainer
+
+            local titleLayout = Instance.new("UIListLayout", TitleFrame)
+            titleLayout.FillDirection = Enum.FillDirection.Horizontal
+            titleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+            titleLayout.Padding = UDim.new(0, 6)
 
             if IconID then
                 local SecIcon = Instance.new("ImageLabel")
-                SecIcon.Size = UDim2.new(0, 16, 0, 16)
-                SecIcon.Position = UDim2.new(0, 12, 0.5, -8)
+                SecIcon.Size = UDim2.new(0, 14, 0, 14)
                 SecIcon.Image = ResolveIcon(IconID)
                 SecIcon.BackgroundTransparency = 1
-                SecIcon.ImageColor3 = Colors.Accent
-                SecIcon.ZIndex = 29
-                SecIcon.Parent = HeaderContainer
+                SecIcon.ImageColor3 = Colors.AccentHover
+                SecIcon.ZIndex = 30
+                SecIcon.Parent = TitleFrame
             end
 
             local HeaderTitle = Instance.new("TextLabel")
-            HeaderTitle.Size = UDim2.new(1, -xPos - 12, 0, 20)
-            HeaderTitle.Position = hasDesc and UDim2.new(0, xPos, 0, 6) or UDim2.new(0, xPos, 0.5, -10)
-            HeaderTitle.Text = Title
+            HeaderTitle.Name = "HeaderTitle"
+            HeaderTitle.AutomaticSize = Enum.AutomaticSize.X
+            HeaderTitle.Size = UDim2.new(0, 0, 1, 0)
+            HeaderTitle.Text = tostring(Title)
             HeaderTitle.Font = Fonts.Title
-            HeaderTitle.TextSize = 14
-            HeaderTitle.TextColor3 = Colors.Text
-            HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+            HeaderTitle.TextSize = 13
+            HeaderTitle.TextColor3 = Colors.AccentHover
+            HeaderTitle.TextXAlignment = Enum.TextXAlignment.Center
             HeaderTitle.BackgroundTransparency = 1
-            HeaderTitle.ZIndex = 29
-            HeaderTitle.Parent = HeaderContainer
+            HeaderTitle.ZIndex = 30
+            HeaderTitle.Parent = TitleFrame
 
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
-                Desc.Size = UDim2.new(1, -xPos - 12, 0, 20)
-                Desc.Position = UDim2.new(0, xPos, 0, 26)
-                Desc.Text = Description
+                Desc.Name = "HeaderDesc"
+                Desc.Size = UDim2.new(1, -20, 0, 14)
+                Desc.Position = UDim2.new(0.5, 0, 0, 22)
+                Desc.AnchorPoint = Vector2.new(0.5, 0)
+                Desc.Text = tostring(Description)
                 Desc.Font = Fonts.Medium
-                Desc.TextSize = 14
+                Desc.TextSize = 11
                 Desc.TextColor3 = Colors.SubText
-                Desc.TextXAlignment = Enum.TextXAlignment.Left
+                Desc.TextXAlignment = Enum.TextXAlignment.Center
                 Desc.BackgroundTransparency = 1
                 Desc.ZIndex = 29
                 Desc.Parent = HeaderContainer
             end
 
             SectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                SectionFrame.Size = UDim2.new(1, 0, 0, SectionLayout.AbsoluteContentSize.Y + 4)
+                SectionFrame.Size = UDim2.new(1, 0, 0, SectionLayout.AbsoluteContentSize.Y + 8)
             end)
 
             -- Text Helper for Row Labels (High Legibility & Thai Vowel Space)
@@ -3215,20 +3281,21 @@ function RaxorHub:Window(GuiConfig)
                 return Button
             end
 
-            -- [[ Label / Divider Banner ]]
+            -- [[ Label / Information Banner ]]
             function sectionItems:AddLabel(Title)
                 local Row = Instance.new("Frame")
-                Row.Size = UDim2.new(1, -4, 0, 36)
-                Row.BackgroundColor3 = Colors.SectionHeaderBg
+                Row.Size = UDim2.new(1, -4, 0, 32)
+                Row.BackgroundColor3 = Color3.fromRGB(20, 21, 29)
                 Row.BorderSizePixel = 0
                 Row.ZIndex = 28
                 Row.Parent = SectionFrame
                 Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 6)
-                AddStroke(Row, Colors.Border, 1)
+                local stroke = AddStroke(Row, Colors.BorderFocus, 1)
+                stroke.Transparency = 0.5
 
                 local Accent = Instance.new("Frame")
                 Accent.Size = UDim2.new(0, 3, 1, -12)
-                Accent.Position = UDim2.new(0, 6, 0.5, 0)
+                Accent.Position = UDim2.new(0, 8, 0.5, 0)
                 Accent.AnchorPoint = Vector2.new(0, 0.5)
                 Accent.BackgroundColor3 = Colors.Accent
                 Accent.BorderSizePixel = 0
@@ -3240,8 +3307,8 @@ function RaxorHub:Window(GuiConfig)
                 TTitle.Text = tostring(Title)
                 TTitle.Size = UDim2.new(1, -26, 1, 0)
                 TTitle.Position = UDim2.new(0, 18, 0, 0)
-                TTitle.Font = Fonts.Title
-                TTitle.TextSize = 13
+                TTitle.Font = Fonts.Medium
+                TTitle.TextSize = 12
                 TTitle.TextColor3 = Colors.Text
                 TTitle.TextXAlignment = Enum.TextXAlignment.Left
                 TTitle.TextWrapped = true
