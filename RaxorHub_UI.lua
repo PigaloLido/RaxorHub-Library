@@ -1237,6 +1237,11 @@ function RaxorHub:Window(GuiConfig)
 
     -- Close Button (Icon 11)
     local closeBtn = CreateTopIconBtn("CloseBtn", Icons.Close, Colors.ControlBtn, Colors.CloseRed, 4, function()
+        if window and window.OnClose then
+            pcall(window.OnClose)
+        elseif RaxorHub.OnClose then
+            pcall(RaxorHub.OnClose)
+        end
         RaxorHub:ResetAllSettings()
         task.wait(0.1)
         ScreenGui:Destroy()
