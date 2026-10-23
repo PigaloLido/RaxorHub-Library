@@ -1003,7 +1003,7 @@ function RaxorHub:Window(GuiConfig)
         end
     end)
 
-    AttachTooltip(ResizeHandle, "ลากเพื่อปรับขนาดหน้าต่าง (Drag to Resize)")
+    AttachTooltip(ResizeHandle, "Drag to Resize Window")
 
     MakeResizable(MainFrame, ResizeHandle)
 
@@ -1220,20 +1220,20 @@ function RaxorHub:Window(GuiConfig)
             PresetsModal.Visible = not PresetsModal.Visible
         end
     end)
-    AttachTooltip(folderBtn, "การตั้งค่า Presets (Config Hub)")
+    AttachTooltip(folderBtn, "Presets Configuration (Config Hub)")
 
     -- Minimize Button (Icon 9)
     local minBtn = CreateTopIconBtn("MinBtn", Icons.Minimize, Colors.ControlBtn, Colors.ButtonHover, 2, function()
         ToggleUI()
     end)
-    AttachTooltip(minBtn, "ย่อ / ซ่อนหน้าต่าง UI (Minimize)")
+    AttachTooltip(minBtn, "Minimize Window")
 
     -- Restore / Center Button (Icon 10)
     local resBtn = CreateTopIconBtn("ResBtn", Icons.Restore, Colors.ControlBtn, Colors.ButtonHover, 3, function()
         local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
         MainFrame.Position = UDim2.new(0.5, -MainFrame.AbsoluteSize.X / 2, 0.5, -MainFrame.AbsoluteSize.Y / 2)
     end)
-    AttachTooltip(resBtn, "จัดกึ่งกลางหน้าจอ (Center Window)")
+    AttachTooltip(resBtn, "Center Window on Screen")
 
     -- Close Button (Icon 11)
     local closeBtn = CreateTopIconBtn("CloseBtn", Icons.Close, Colors.ControlBtn, Colors.CloseRed, 4, function()
@@ -1246,7 +1246,7 @@ function RaxorHub:Window(GuiConfig)
         task.wait(0.1)
         ScreenGui:Destroy()
     end)
-    AttachTooltip(closeBtn, "ปิดโปรแกรม (Close RaxorHub)")
+    AttachTooltip(closeBtn, "Close RaxorHub")
 
     -- Search Element Box (Left-aligned, flexible width, NEVER overlaps with controls!)
     local SearchContainer = Instance.new("Frame")
@@ -1366,7 +1366,7 @@ function RaxorHub:Window(GuiConfig)
     PresetsCloseBtn.MouseButton1Click:Connect(function()
         PresetsModal.Visible = false
     end)
-    AttachTooltip(PresetsCloseBtn, "ปิดหน้าต่าง Presets (Close)")
+    AttachTooltip(PresetsCloseBtn, "Close Presets")
 
     -- New Config Input & Save Button (Large touch target for Mobile)
     local ConfigInputFrame = Instance.new("Frame")
@@ -1410,7 +1410,7 @@ function RaxorHub:Window(GuiConfig)
     AddConfigBtn.MouseLeave:Connect(function()
         Tween(AddConfigBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.Accent})
     end)
-    AttachTooltip(AddConfigBtn, "บันทึก Preset ใหม่ (Save Config)")
+    AttachTooltip(AddConfigBtn, "Save New Preset")
 
     -- Configs Scrolling List
     local PresetsScroll = Instance.new("ScrollingFrame")
@@ -1485,7 +1485,7 @@ function RaxorHub:Window(GuiConfig)
     FooterResetBtn.MouseLeave:Connect(function()
         Tween(FooterResetBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonBg, TextColor3 = Colors.SubText})
     end)
-    AttachTooltip(FooterResetBtn, "ยกเลิก Autoload (Clear Autoload)")
+    AttachTooltip(FooterResetBtn, "Clear Autoload")
 
     local function RefreshPresetsList()
         -- FIX BUG: Clean up ALL previous items (including TextLabel and Frames) except layouts
@@ -1588,7 +1588,7 @@ function RaxorHub:Window(GuiConfig)
             loadBtn.MouseButton1Click:Connect(function()
                 RaxorHub:LoadConfigData(cfgName)
             end)
-            AttachTooltip(loadBtn, "โหลดการตั้งค่านี้ (Load Config)")
+            AttachTooltip(loadBtn, "Load This Preset")
 
             -- 2. Overwrite Button (Width 28, Height 28)
             local overwriteBtn = Instance.new("ImageButton")
@@ -1613,11 +1613,11 @@ function RaxorHub:Window(GuiConfig)
                 RaxorHub:SaveCurrentConfig(cfgName)
                 RaxorHub:Notify({
                     Title = "Preset Overwritten",
-                    Content = "เขียนทับการตั้งค่าลง '" .. cfgName .. "' เรียบร้อย",
+                    Content = "Overwrote preset '" .. cfgName .. "' successfully",
                     Duration = 2.5
                 })
             end)
-            AttachTooltip(overwriteBtn, "เขียนทับด้วยการตั้งค่าปัจจุบัน (Overwrite)")
+            AttachTooltip(overwriteBtn, "Overwrite with Current Settings")
 
             -- 3. Autoload Toggle Button (Width 28, Height 28)
             local autoBtn = Instance.new("ImageButton")
@@ -1650,7 +1650,7 @@ function RaxorHub:Window(GuiConfig)
                 end
                 RefreshPresetsList()
             end)
-            AttachTooltip(autoBtn, isAuto and "ยกเลิกโหลดอัตโนมัติ (Disable Autoload)" or "ตั้งเป็นโหลดอัตโนมัติ (Enable Autoload)")
+            AttachTooltip(autoBtn, isAuto and "Disable Autoload" or "Enable Autoload")
 
             -- 4. Delete Button (Width 28, Height 28 - Custom Asset 93749431604052)
             local delBtn = Instance.new("ImageButton")
@@ -1676,11 +1676,11 @@ function RaxorHub:Window(GuiConfig)
                 RefreshPresetsList()
                 RaxorHub:Notify({
                     Title = "Preset Deleted",
-                    Content = "ลบการตั้งค่า '" .. cfgName .. "' สำเร็จ",
+                    Content = "Deleted preset '" .. cfgName .. "' successfully",
                     Duration = 2.5
                 })
             end)
-            AttachTooltip(delBtn, "ลบ Preset นี้อย่างถาวร (Delete Config)")
+            AttachTooltip(delBtn, "Delete This Preset Permanently")
         end
     end
     RaxorHub.RefreshPresetsList = RefreshPresetsList
@@ -1698,13 +1698,13 @@ function RaxorHub:Window(GuiConfig)
             RefreshPresetsList()
             RaxorHub:Notify({
                 Title = "Preset Saved",
-                Content = "บันทึกการตั้งค่า '" .. name .. "' สำเร็จ",
+                Content = "Saved preset '" .. name .. "' successfully",
                 Duration = 2.5
             })
         else
             RaxorHub:Notify({
                 Title = "Error",
-                Content = "กรุณากรอกชื่อ Preset ก่อนกดบันทึก",
+                Content = "Please enter a preset name before saving",
                 Duration = 2.5
             })
         end
@@ -1719,7 +1719,7 @@ function RaxorHub:Window(GuiConfig)
                 RefreshPresetsList()
                 RaxorHub:Notify({
                     Title = "Preset Saved",
-                    Content = "บันทึกการตั้งค่า '" .. name .. "' สำเร็จ",
+                    Content = "Saved preset '" .. name .. "' successfully",
                     Duration = 2.5
                 })
             end
@@ -1842,7 +1842,7 @@ function RaxorHub:Window(GuiConfig)
         -- Breadcrumb Header inside Page (Matches Blade Image 1 & 4!)
         local BreadcrumbRow = Instance.new("Frame")
         BreadcrumbRow.Name = "BreadcrumbRow"
-        BreadcrumbRow.Size = UDim2.new(1, -4, 0, 24)
+        BreadcrumbRow.Size = UDim2.new(1, -4, 0, 26)
         BreadcrumbRow.BackgroundTransparency = 1
         BreadcrumbRow.LayoutOrder = -100
         BreadcrumbRow.ZIndex = 27
@@ -1850,8 +1850,8 @@ function RaxorHub:Window(GuiConfig)
 
         local BreadcrumbTag = Instance.new("Frame")
         BreadcrumbTag.Name = "BreadcrumbTag"
-        BreadcrumbTag.Size = UDim2.new(0, 3, 0, 14)
-        BreadcrumbTag.Position = UDim2.new(0, 4, 0.5, -7)
+        BreadcrumbTag.Size = UDim2.new(0, 4, 0, 16)
+        BreadcrumbTag.Position = UDim2.new(0, 4, 0.5, -8)
         BreadcrumbTag.BackgroundColor3 = Colors.Accent
         BreadcrumbTag.BorderSizePixel = 0
         BreadcrumbTag.ZIndex = 28
@@ -1860,10 +1860,10 @@ function RaxorHub:Window(GuiConfig)
 
         local BreadcrumbLabel = Instance.new("TextLabel")
         BreadcrumbLabel.Size = UDim2.new(1, -18, 1, 0)
-        BreadcrumbLabel.Position = UDim2.new(0, 14, 0, 0)
+        BreadcrumbLabel.Position = UDim2.new(0, 16, 0, 0)
         BreadcrumbLabel.Text = TabConfig.Name
         BreadcrumbLabel.Font = Fonts.Title
-        BreadcrumbLabel.TextSize = 15
+        BreadcrumbLabel.TextSize = 16
         BreadcrumbLabel.TextColor3 = Colors.White
         BreadcrumbLabel.TextXAlignment = Enum.TextXAlignment.Left
         BreadcrumbLabel.BackgroundTransparency = 1
@@ -1929,7 +1929,7 @@ function RaxorHub:Window(GuiConfig)
             local hasDesc = Description and Description ~= ""
 
             -- Header Container (Centered Prominent Section Divider)
-            local HeaderHeight = hasDesc and 40 or 28
+            local HeaderHeight = hasDesc and 44 or 30
             local HeaderContainer = Instance.new("Frame")
             HeaderContainer.Name = "HeaderContainer"
             HeaderContainer.Size = UDim2.new(1, -4, 0, HeaderHeight)
@@ -1945,7 +1945,7 @@ function RaxorHub:Window(GuiConfig)
             -- Title Row: Holds LeftLine, Center Title (with optional Icon), and RightLine all on the EXACT same vertical center
             local TitleRow = Instance.new("Frame")
             TitleRow.Name = "TitleRow"
-            TitleRow.Size = UDim2.new(1, -20, 0, 18)
+            TitleRow.Size = UDim2.new(1, -20, 0, 20)
             TitleRow.Position = hasDesc and UDim2.new(0.5, 0, 0, 5) or UDim2.new(0.5, 0, 0.5, 0)
             TitleRow.AnchorPoint = hasDesc and Vector2.new(0.5, 0) or Vector2.new(0.5, 0.5)
             TitleRow.BackgroundTransparency = 1
@@ -1971,7 +1971,7 @@ function RaxorHub:Window(GuiConfig)
 
             if IconID then
                 local SecIcon = Instance.new("ImageLabel")
-                SecIcon.Size = UDim2.new(0, 14, 0, 14)
+                SecIcon.Size = UDim2.new(0, 16, 0, 16)
                 SecIcon.Image = ResolveIcon(IconID)
                 SecIcon.BackgroundTransparency = 1
                 SecIcon.ImageColor3 = Colors.AccentHover
@@ -1985,7 +1985,7 @@ function RaxorHub:Window(GuiConfig)
             HeaderTitle.Size = UDim2.new(0, 0, 1, 0)
             HeaderTitle.Text = tostring(Title)
             HeaderTitle.Font = Fonts.Title
-            HeaderTitle.TextSize = 13
+            HeaderTitle.TextSize = 15
             HeaderTitle.TextColor3 = Colors.AccentHover
             HeaderTitle.TextXAlignment = Enum.TextXAlignment.Center
             HeaderTitle.BackgroundTransparency = 1
@@ -2032,7 +2032,7 @@ function RaxorHub:Window(GuiConfig)
                 local centerW = CenterBlock.AbsoluteSize.X
                 if centerW <= 0 then
                     local TextService = game:GetService("TextService")
-                    local sz = TextService:GetTextSize(tostring(Title), 13, Fonts.Title, Vector2.new(1000, 1000))
+                    local sz = TextService:GetTextSize(tostring(Title), 15, Fonts.Title, Vector2.new(1000, 1000))
                     centerW = sz.X + (IconID and 22 or 0)
                 end
                 if rowW > 0 and centerW > 0 then
@@ -2050,12 +2050,12 @@ function RaxorHub:Window(GuiConfig)
             if hasDesc then
                 local Desc = Instance.new("TextLabel")
                 Desc.Name = "HeaderDesc"
-                Desc.Size = UDim2.new(1, -20, 0, 14)
-                Desc.Position = UDim2.new(0.5, 0, 0, 24)
+                Desc.Size = UDim2.new(1, -20, 0, 15)
+                Desc.Position = UDim2.new(0.5, 0, 0, 25)
                 Desc.AnchorPoint = Vector2.new(0.5, 0)
                 Desc.Text = tostring(Description)
                 Desc.Font = Fonts.Medium
-                Desc.TextSize = 11
+                Desc.TextSize = 12
                 Desc.TextColor3 = Colors.SubText
                 Desc.TextXAlignment = Enum.TextXAlignment.Center
                 Desc.BackgroundTransparency = 1
@@ -3362,6 +3362,319 @@ function RaxorHub:Window(GuiConfig)
                     TTitle.TextColor3 = color
                 end
                 return labelFunc
+            end
+
+            -- [[ Log Box / History Audit Control (Sleek Modern Feed with Badges & Clear) ]]
+            function sectionItems:AddLogBox(Config)
+                Config = Config or {}
+                local boxHeight = Config.Height or 170
+                local maxEntries = Config.MaxEntries or 80
+                local entriesList = {}
+
+                local Container = Instance.new("Frame")
+                Container.Name = "RaxorLogBox"
+                Container.Size = UDim2.new(1, -4, 0, boxHeight + 46)
+                Container.BackgroundColor3 = Colors.CardBg
+                Container.ZIndex = 28
+                Container.Parent = SectionFrame
+                Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 6)
+                AddStroke(Container, Colors.Border, 1)
+
+                -- Header Frame
+                local Header = Instance.new("Frame")
+                Header.Name = "LogHeader"
+                Header.Size = UDim2.new(1, -16, 0, 32)
+                Header.Position = UDim2.new(0, 8, 0, 4)
+                Header.BackgroundTransparency = 1
+                Header.ZIndex = 29
+                Header.Parent = Container
+
+                local HeaderAccent = Instance.new("Frame")
+                HeaderAccent.Size = UDim2.new(0, 3, 0, 14)
+                HeaderAccent.Position = UDim2.new(0, 0, 0.5, -7)
+                HeaderAccent.BackgroundColor3 = Colors.Accent
+                HeaderAccent.BorderSizePixel = 0
+                HeaderAccent.ZIndex = 30
+                HeaderAccent.Parent = Header
+                Instance.new("UICorner", HeaderAccent).CornerRadius = UDim.new(1, 0)
+
+                local TitleLabel = Instance.new("TextLabel")
+                TitleLabel.Text = tostring(Config.Title or "Activity Log")
+                TitleLabel.Font = Fonts.Title
+                TitleLabel.TextSize = 13
+                TitleLabel.TextColor3 = Colors.Text
+                TitleLabel.Size = UDim2.new(1, -140, 1, 0)
+                TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+                TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+                TitleLabel.BackgroundTransparency = 1
+                TitleLabel.ZIndex = 30
+                TitleLabel.Parent = Header
+
+                local CounterBadge = Instance.new("TextLabel")
+                CounterBadge.Text = "(0)"
+                CounterBadge.Font = Fonts.Medium
+                CounterBadge.TextSize = 11
+                CounterBadge.TextColor3 = Colors.SubText
+                CounterBadge.Size = UDim2.new(0, 45, 1, 0)
+                CounterBadge.Position = UDim2.new(0, 10 + TitleLabel.TextBounds.X + 8, 0, 0)
+                CounterBadge.TextXAlignment = Enum.TextXAlignment.Left
+                CounterBadge.BackgroundTransparency = 1
+                CounterBadge.ZIndex = 30
+                CounterBadge.Parent = Header
+
+                TitleLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+                    CounterBadge.Position = UDim2.new(0, 10 + TitleLabel.TextBounds.X + 8, 0, 0)
+                end)
+
+                -- Clear Button
+                local ClearBtn = Instance.new("TextButton")
+                ClearBtn.Name = "ClearBtn"
+                ClearBtn.Size = UDim2.new(0, 60, 0, 22)
+                ClearBtn.Position = UDim2.new(1, -60, 0.5, -11)
+                ClearBtn.BackgroundColor3 = Colors.ButtonBg
+                ClearBtn.AutoButtonColor = false
+                ClearBtn.Text = "Clear"
+                ClearBtn.Font = Fonts.Medium
+                ClearBtn.TextSize = 11
+                ClearBtn.TextColor3 = Colors.SubText
+                ClearBtn.ZIndex = 31
+                ClearBtn.Parent = Header
+                Instance.new("UICorner", ClearBtn).CornerRadius = UDim.new(0, 4)
+                AddStroke(ClearBtn, Colors.Border, 1)
+
+                ClearBtn.MouseEnter:Connect(function()
+                    Tween(ClearBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonHover, TextColor3 = Colors.White})
+                end)
+                ClearBtn.MouseLeave:Connect(function()
+                    Tween(ClearBtn, TweenInfo.new(0.12), {BackgroundColor3 = Colors.ButtonBg, TextColor3 = Colors.SubText})
+                end)
+
+                -- Content Frame (ScrollingFrame)
+                local Scroll = Instance.new("ScrollingFrame")
+                Scroll.Name = "LogScroll"
+                Scroll.Size = UDim2.new(1, -16, 0, boxHeight)
+                Scroll.Position = UDim2.new(0, 8, 0, 38)
+                Scroll.BackgroundColor3 = Color3.fromRGB(17, 18, 23)
+                Scroll.BorderSizePixel = 0
+                Scroll.ScrollBarThickness = 3
+                Scroll.ScrollBarImageColor3 = Colors.BorderFocus
+                Scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+                Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+                Scroll.ZIndex = 29
+                Scroll.Parent = Container
+                Instance.new("UICorner", Scroll).CornerRadius = UDim.new(0, 4)
+                AddStroke(Scroll, Colors.Border, 1)
+
+                local ScrollPadding = Instance.new("UIPadding", Scroll)
+                ScrollPadding.PaddingTop = UDim.new(0, 4)
+                ScrollPadding.PaddingBottom = UDim.new(0, 4)
+                ScrollPadding.PaddingLeft = UDim.new(0, 4)
+                ScrollPadding.PaddingRight = UDim.new(0, 4)
+
+                local LogLayout = Instance.new("UIListLayout", Scroll)
+                LogLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                LogLayout.Padding = UDim.new(0, 4)
+
+                local EmptyLabel = Instance.new("TextLabel")
+                EmptyLabel.Name = "EmptyLabel"
+                EmptyLabel.Size = UDim2.new(1, 0, 1, 0)
+                EmptyLabel.Text = Config.EmptyText or "No log records yet (Waiting for activity...)"
+                EmptyLabel.Font = Fonts.Regular
+                EmptyLabel.TextSize = 11
+                EmptyLabel.TextColor3 = Colors.MutedText
+                EmptyLabel.TextXAlignment = Enum.TextXAlignment.Center
+                EmptyLabel.BackgroundTransparency = 1
+                EmptyLabel.ZIndex = 30
+                EmptyLabel.Parent = Scroll
+
+                local function UpdateCounter()
+                    CounterBadge.Text = "(" .. tostring(#entriesList) .. ")"
+                    EmptyLabel.Visible = (#entriesList == 0)
+                end
+
+                local RarityColors = {
+                    ["Divine"]    = Color3.fromRGB(255, 220, 80),
+                    ["Secret"]    = Color3.fromRGB(235, 90, 255),
+                    ["Mythic"]    = Color3.fromRGB(255, 68, 85),
+                    ["Legendary"] = Color3.fromRGB(255, 170, 40),
+                    ["Epic"]      = Color3.fromRGB(180, 100, 255),
+                    ["Rare"]      = Color3.fromRGB(80, 165, 255),
+                    ["Uncommon"]  = Color3.fromRGB(100, 225, 120),
+                    ["Common"]    = Color3.fromRGB(180, 185, 195)
+                }
+
+                local logObj = {}
+
+                function logObj:AddEntry(data)
+                    if type(data) ~= "table" then
+                        data = { Name = tostring(data) }
+                    end
+
+                    table.insert(entriesList, data)
+                    if #entriesList > maxEntries then
+                        table.remove(entriesList, 1)
+                        local firstChild = Scroll:FindFirstChild("Entry_1")
+                        if firstChild then firstChild:Destroy() end
+                    end
+
+                    UpdateCounter()
+
+                    local order = #entriesList
+                    local item = Instance.new("Frame")
+                    item.Name = "Entry_" .. tostring(order)
+                    item.Size = UDim2.new(1, -2, 0, 28)
+                    item.LayoutOrder = -order -- Newest on top!
+                    item.BackgroundColor3 = Color3.fromRGB(22, 23, 31)
+                    item.ZIndex = 30
+                    item.Parent = Scroll
+                    Instance.new("UICorner", item).CornerRadius = UDim.new(0, 4)
+                    AddStroke(item, Colors.Border, 1)
+
+                    local itemLayout = Instance.new("UIListLayout", item)
+                    itemLayout.FillDirection = Enum.FillDirection.Horizontal
+                    itemLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+                    itemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                    itemLayout.Padding = UDim.new(0, 6)
+
+                    local itemPad = Instance.new("UIPadding", item)
+                    itemPad.PaddingLeft = UDim.new(0, 6)
+                    itemPad.PaddingRight = UDim.new(0, 6)
+
+                    -- 1. Timestamp Pill
+                    local timeStr = data.Time or os.date("%H:%M:%S")
+                    local timeLbl = Instance.new("TextLabel")
+                    timeLbl.LayoutOrder = 1
+                    timeLbl.Size = UDim2.new(0, 52, 0, 18)
+                    timeLbl.Text = timeStr
+                    timeLbl.Font = Fonts.Medium
+                    timeLbl.TextSize = 10
+                    timeLbl.TextColor3 = Colors.MutedText
+                    timeLbl.BackgroundTransparency = 1
+                    timeLbl.ZIndex = 31
+                    timeLbl.Parent = item
+
+                    -- 2. Action Badge
+                    local action = tostring(data.Action or "INFO"):upper()
+                    local actBg = Colors.ButtonBg
+                    local actFg = Colors.White
+                    if action == "BUY" then
+                        actBg = Color3.fromRGB(34, 130, 75)
+                    elseif action == "ROLL" or action == "TARGET" then
+                        actBg = Colors.Accent
+                    elseif action == "MANUAL" or action == "MANUAL BUY" then
+                        actBg = Color3.fromRGB(150, 100, 30)
+                    end
+
+                    local actBadge = Instance.new("Frame")
+                    actBadge.LayoutOrder = 2
+                    actBadge.Size = UDim2.new(0, action == "MANUAL BUY" and 65 or 45, 0, 18)
+                    actBadge.BackgroundColor3 = actBg
+                    actBadge.ZIndex = 31
+                    actBadge.Parent = item
+                    Instance.new("UICorner", actBadge).CornerRadius = UDim.new(0, 3)
+
+                    local actText = Instance.new("TextLabel")
+                    actText.Size = UDim2.new(1, 0, 1, 0)
+                    actText.Text = action
+                    actText.Font = Fonts.Title
+                    actText.TextSize = 9
+                    actText.TextColor3 = actFg
+                    actText.BackgroundTransparency = 1
+                    actText.ZIndex = 32
+                    actText.Parent = actBadge
+
+                    -- 3. Slot badge (if provided)
+                    if data.Slot then
+                        local slotBadge = Instance.new("Frame")
+                        slotBadge.LayoutOrder = 3
+                        slotBadge.Size = UDim2.new(0, 24, 0, 18)
+                        slotBadge.BackgroundColor3 = Color3.fromRGB(30, 32, 42)
+                        slotBadge.ZIndex = 31
+                        slotBadge.Parent = item
+                        Instance.new("UICorner", slotBadge).CornerRadius = UDim.new(0, 3)
+
+                        local slotText = Instance.new("TextLabel")
+                        slotText.Size = UDim2.new(1, 0, 1, 0)
+                        slotText.Text = "S" .. tostring(data.Slot)
+                        slotText.Font = Fonts.Medium
+                        slotText.TextSize = 9
+                        slotText.TextColor3 = Colors.SubText
+                        slotText.BackgroundTransparency = 1
+                        slotText.ZIndex = 32
+                        slotText.Parent = slotBadge
+                    end
+
+                    -- 4. Monster Name & Rarity
+                    local nameStr = tostring(data.Name or data.Message or "Unknown")
+                    local rarityStr = tostring(data.Rarity or "Common")
+                    local rColor = RarityColors[rarityStr] or Colors.Text
+
+                    local nameLbl = Instance.new("TextLabel")
+                    nameLbl.LayoutOrder = 4
+                    nameLbl.Size = UDim2.new(0, 140, 0, 18)
+                    nameLbl.Text = nameStr .. " [" .. rarityStr .. "]"
+                    nameLbl.Font = Fonts.Title
+                    nameLbl.TextSize = 11
+                    nameLbl.TextColor3 = rColor
+                    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                    nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+                    nameLbl.BackgroundTransparency = 1
+                    nameLbl.ZIndex = 31
+                    nameLbl.Parent = item
+
+                    -- 5. Mutation Tag (if not None)
+                    if data.Mutation and data.Mutation ~= "None" and data.Mutation ~= "" then
+                        local mutBadge = Instance.new("Frame")
+                        mutBadge.LayoutOrder = 5
+                        mutBadge.Size = UDim2.new(0, 56, 0, 18)
+                        mutBadge.BackgroundColor3 = Color3.fromRGB(40, 30, 55)
+                        mutBadge.ZIndex = 31
+                        mutBadge.Parent = item
+                        Instance.new("UICorner", mutBadge).CornerRadius = UDim.new(0, 3)
+                        AddStroke(mutBadge, Color3.fromRGB(150, 80, 220), 1)
+
+                        local mutText = Instance.new("TextLabel")
+                        mutText.Size = UDim2.new(1, 0, 1, 0)
+                        mutText.Text = tostring(data.Mutation)
+                        mutText.Font = Fonts.Medium
+                        mutText.TextSize = 9
+                        mutText.TextColor3 = Color3.fromRGB(220, 170, 255)
+                        mutText.BackgroundTransparency = 1
+                        mutText.ZIndex = 32
+                        mutText.Parent = mutBadge
+                    end
+
+                    -- 6. Price Tag (Right-aligned or Flexible)
+                    if data.Price then
+                        local priceLbl = Instance.new("TextLabel")
+                        priceLbl.LayoutOrder = 6
+                        priceLbl.Size = UDim2.new(1, -300, 0, 18)
+                        priceLbl.Text = "Price: " .. tostring(data.Price)
+                        priceLbl.Font = Fonts.Medium
+                        priceLbl.TextSize = 10
+                        priceLbl.TextColor3 = Color3.fromRGB(255, 215, 60)
+                        priceLbl.TextXAlignment = Enum.TextXAlignment.Right
+                        priceLbl.BackgroundTransparency = 1
+                        priceLbl.ZIndex = 31
+                        priceLbl.Parent = item
+                    end
+                end
+
+                function logObj:Clear()
+                    entriesList = {}
+                    for _, child in ipairs(Scroll:GetChildren()) do
+                        if child:IsA("Frame") and string.find(child.Name, "Entry_") then
+                            child:Destroy()
+                        end
+                    end
+                    UpdateCounter()
+                end
+
+                ClearBtn.MouseButton1Click:Connect(function()
+                    logObj:Clear()
+                end)
+
+                return logObj
             end
 
             -- [[ Keybind Control (Blade Keybind Modal Image 6) ]]
