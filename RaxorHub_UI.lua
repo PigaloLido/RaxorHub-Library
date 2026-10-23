@@ -3530,28 +3530,34 @@ function RaxorHub:Window(GuiConfig)
                     Instance.new("UICorner", item).CornerRadius = UDim.new(0, 4)
                     AddStroke(item, Colors.Border, 1)
 
-                    local itemLayout = Instance.new("UIListLayout", item)
-                    itemLayout.FillDirection = Enum.FillDirection.Horizontal
-                    itemLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-                    itemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                    itemLayout.Padding = UDim.new(0, 6)
+                    -- Left Container (holds Timestamp, Action, Slot, Monster Name & Mutation)
+                    local leftRow = Instance.new("Frame")
+                    leftRow.Name = "LeftRow"
+                    leftRow.Size = UDim2.new(1, -120, 1, 0)
+                    leftRow.Position = UDim2.new(0, 6, 0, 0)
+                    leftRow.BackgroundTransparency = 1
+                    leftRow.ClipsDescendants = true
+                    leftRow.ZIndex = 31
+                    leftRow.Parent = item
 
-                    local itemPad = Instance.new("UIPadding", item)
-                    itemPad.PaddingLeft = UDim.new(0, 6)
-                    itemPad.PaddingRight = UDim.new(0, 6)
+                    local leftLayout = Instance.new("UIListLayout", leftRow)
+                    leftLayout.FillDirection = Enum.FillDirection.Horizontal
+                    leftLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+                    leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                    leftLayout.Padding = UDim.new(0, 6)
 
                     -- 1. Timestamp Pill
                     local timeStr = data.Time or os.date("%H:%M:%S")
                     local timeLbl = Instance.new("TextLabel")
                     timeLbl.LayoutOrder = 1
-                    timeLbl.Size = UDim2.new(0, 52, 0, 18)
+                    timeLbl.Size = UDim2.new(0, 50, 0, 18)
                     timeLbl.Text = timeStr
                     timeLbl.Font = Fonts.Medium
                     timeLbl.TextSize = 10
                     timeLbl.TextColor3 = Colors.MutedText
                     timeLbl.BackgroundTransparency = 1
-                    timeLbl.ZIndex = 31
-                    timeLbl.Parent = item
+                    timeLbl.ZIndex = 32
+                    timeLbl.Parent = leftRow
 
                     -- 2. Action Badge
                     local action = tostring(data.Action or "INFO"):upper()
@@ -3567,10 +3573,10 @@ function RaxorHub:Window(GuiConfig)
 
                     local actBadge = Instance.new("Frame")
                     actBadge.LayoutOrder = 2
-                    actBadge.Size = UDim2.new(0, action == "MANUAL BUY" and 65 or 45, 0, 18)
+                    actBadge.Size = UDim2.new(0, (action == "MANUAL BUY" or action == "TARGET") and 52 or 42, 0, 18)
                     actBadge.BackgroundColor3 = actBg
-                    actBadge.ZIndex = 31
-                    actBadge.Parent = item
+                    actBadge.ZIndex = 32
+                    actBadge.Parent = leftRow
                     Instance.new("UICorner", actBadge).CornerRadius = UDim.new(0, 3)
 
                     local actText = Instance.new("TextLabel")
@@ -3580,7 +3586,7 @@ function RaxorHub:Window(GuiConfig)
                     actText.TextSize = 9
                     actText.TextColor3 = actFg
                     actText.BackgroundTransparency = 1
-                    actText.ZIndex = 32
+                    actText.ZIndex = 33
                     actText.Parent = actBadge
 
                     -- 3. Slot badge (if provided)
@@ -3589,8 +3595,8 @@ function RaxorHub:Window(GuiConfig)
                         slotBadge.LayoutOrder = 3
                         slotBadge.Size = UDim2.new(0, 24, 0, 18)
                         slotBadge.BackgroundColor3 = Color3.fromRGB(30, 32, 42)
-                        slotBadge.ZIndex = 31
-                        slotBadge.Parent = item
+                        slotBadge.ZIndex = 32
+                        slotBadge.Parent = leftRow
                         Instance.new("UICorner", slotBadge).CornerRadius = UDim.new(0, 3)
 
                         local slotText = Instance.new("TextLabel")
@@ -3600,7 +3606,7 @@ function RaxorHub:Window(GuiConfig)
                         slotText.TextSize = 9
                         slotText.TextColor3 = Colors.SubText
                         slotText.BackgroundTransparency = 1
-                        slotText.ZIndex = 32
+                        slotText.ZIndex = 33
                         slotText.Parent = slotBadge
                     end
 
@@ -3609,9 +3615,18 @@ function RaxorHub:Window(GuiConfig)
                     local rarityStr = tostring(data.Rarity or "Common")
                     local rColor = RarityColors[rarityStr] or Colors.Text
 
+                    -- Strip redundant mutation suffix from name if mutation badge is shown
+                    if data.Mutation and data.Mutation ~= "None" and data.Mutation ~= "" then
+                        local suffix = "_" .. tostring(data.Mutation)
+                        if string.sub(nameStr:lower(), -#suffix) == suffix:lower() then
+                            nameStr = string.sub(nameStr, 1, #nameStr - #suffix)
+                        end
+                    end
+
+                    local hasMutation = (data.Mutation and data.Mutation ~= "None" and data.Mutation ~= "")
                     local nameLbl = Instance.new("TextLabel")
                     nameLbl.LayoutOrder = 4
-                    nameLbl.Size = UDim2.new(0, 140, 0, 18)
+                    nameLbl.Size = UDim2.new(0, hasMutation and 145 or 195, 0, 18)
                     nameLbl.Text = nameStr .. " [" .. rarityStr .. "]"
                     nameLbl.Font = Fonts.Title
                     nameLbl.TextSize = 11
@@ -3619,17 +3634,17 @@ function RaxorHub:Window(GuiConfig)
                     nameLbl.TextXAlignment = Enum.TextXAlignment.Left
                     nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
                     nameLbl.BackgroundTransparency = 1
-                    nameLbl.ZIndex = 31
-                    nameLbl.Parent = item
+                    nameLbl.ZIndex = 32
+                    nameLbl.Parent = leftRow
 
                     -- 5. Mutation Tag (if not None)
-                    if data.Mutation and data.Mutation ~= "None" and data.Mutation ~= "" then
+                    if hasMutation then
                         local mutBadge = Instance.new("Frame")
                         mutBadge.LayoutOrder = 5
-                        mutBadge.Size = UDim2.new(0, 56, 0, 18)
+                        mutBadge.Size = UDim2.new(0, 54, 0, 18)
                         mutBadge.BackgroundColor3 = Color3.fromRGB(40, 30, 55)
-                        mutBadge.ZIndex = 31
-                        mutBadge.Parent = item
+                        mutBadge.ZIndex = 32
+                        mutBadge.Parent = leftRow
                         Instance.new("UICorner", mutBadge).CornerRadius = UDim.new(0, 3)
                         AddStroke(mutBadge, Color3.fromRGB(150, 80, 220), 1)
 
@@ -3640,22 +3655,24 @@ function RaxorHub:Window(GuiConfig)
                         mutText.TextSize = 9
                         mutText.TextColor3 = Color3.fromRGB(220, 170, 255)
                         mutText.BackgroundTransparency = 1
-                        mutText.ZIndex = 32
+                        mutText.ZIndex = 33
                         mutText.Parent = mutBadge
                     end
 
-                    -- 6. Price Tag (Right-aligned or Flexible)
-                    if data.Price then
+                    -- 6. Price Tag (Right-Anchored Pinned at Right Edge)
+                    if data.Price and tostring(data.Price) ~= "" and tostring(data.Price) ~= "Standard Price" then
                         local priceLbl = Instance.new("TextLabel")
-                        priceLbl.LayoutOrder = 6
-                        priceLbl.Size = UDim2.new(1, -300, 0, 18)
+                        priceLbl.Name = "PriceLabel"
+                        priceLbl.AnchorPoint = Vector2.new(1, 0.5)
+                        priceLbl.Position = UDim2.new(1, -8, 0.5, 0)
+                        priceLbl.Size = UDim2.new(0, 110, 0, 18)
                         priceLbl.Text = "Price: " .. tostring(data.Price)
                         priceLbl.Font = Fonts.Medium
                         priceLbl.TextSize = 10
                         priceLbl.TextColor3 = Color3.fromRGB(255, 215, 60)
                         priceLbl.TextXAlignment = Enum.TextXAlignment.Right
                         priceLbl.BackgroundTransparency = 1
-                        priceLbl.ZIndex = 31
+                        priceLbl.ZIndex = 32
                         priceLbl.Parent = item
                     end
                 end
