@@ -1059,7 +1059,7 @@ function RaxorHub:Window(GuiConfig)
     SidebarHeaderCloseBtn.Position = UDim2.new(1, -32, 0.5, -12)
     SidebarHeaderCloseBtn.BackgroundColor3 = Colors.ControlBtn
     SidebarHeaderCloseBtn.AutoButtonColor = false
-    SidebarHeaderCloseBtn.ZIndex = 24
+    SidebarHeaderCloseBtn.ZIndex = 45
     SidebarHeaderCloseBtn.Parent = BrandContainer
     Instance.new("UICorner", SidebarHeaderCloseBtn).CornerRadius = UDim.new(0, 6)
     local headerCloseStroke = AddStroke(SidebarHeaderCloseBtn, Colors.Border, 1)
@@ -1071,7 +1071,7 @@ function RaxorHub:Window(GuiConfig)
     headerCloseIcon.Rotation = 90 -- Points left ❮
     headerCloseIcon.ImageColor3 = Colors.SubText
     headerCloseIcon.BackgroundTransparency = 1
-    headerCloseIcon.ZIndex = 25
+    headerCloseIcon.ZIndex = 46
     headerCloseIcon.Parent = SidebarHeaderCloseBtn
 
     SidebarHeaderCloseBtn.MouseEnter:Connect(function()
@@ -1164,17 +1164,7 @@ function RaxorHub:Window(GuiConfig)
     ProfileStatus.Parent = ProfileCard
 
     -- [[ Top Bar Area (Fixed overlapping: Search on Left, Controls on Right) ]]
-    -- Dedicated Full-Top Drag Area (entire top width except 145px for top-right control buttons)
-    local TopDragZone = Instance.new("Frame")
-    TopDragZone.Name = "TopDragZone"
-    TopDragZone.Size = UDim2.new(1, -145, 0, 50)
-    TopDragZone.Position = UDim2.new(0, 0, 0, 0)
-    TopDragZone.BackgroundTransparency = 1
-    TopDragZone.ZIndex = 34
-    TopDragZone.Active = true
-    TopDragZone.Parent = MainFrame
-
-    MakeDraggable(MainFrame, TopDragZone)
+    -- BrandContainer Draggable
     MakeDraggable(MainFrame, BrandContainer)
 
     local TopBar = Instance.new("Frame")
