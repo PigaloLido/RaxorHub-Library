@@ -1,12 +1,3 @@
---[[
-    ╔════════════════════════════════════════════════════════════════════╗
-    ║                           RAXORHUB UI                              ║
-    ║                           PC & Mobile                              ║
-    ║                         Version: v2.1.6                            ║
-    ║                           By : Pigalo                              ║
-    ╚════════════════════════════════════════════════════════════════════╝
-]]
-
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -1015,6 +1006,7 @@ function RaxorHub:Window(GuiConfig)
     Sidebar.Position = UDim2.new(0, 0, 0, 0)
     Sidebar.BackgroundColor3 = Colors.SidebarBg
     Sidebar.BorderSizePixel = 0
+    Sidebar.ClipsDescendants = true
     Sidebar.ZIndex = 20
     Sidebar.Parent = MainFrame
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
@@ -1052,12 +1044,47 @@ function RaxorHub:Window(GuiConfig)
     BrandTitle.TextSize = 16
     BrandTitle.TextColor3 = Colors.Text
     BrandTitle.Position = UDim2.new(0, 46, 0.5, -9)
-    BrandTitle.Size = UDim2.new(1, -52, 0, 18)
+    BrandTitle.Size = UDim2.new(1, -80, 0, 18)
+    BrandTitle.TextTruncate = Enum.TextTruncate.AtEnd
     BrandTitle.TextXAlignment = Enum.TextXAlignment.Left
     BrandTitle.BackgroundTransparency = 1
     BrandTitle.Active = false
     BrandTitle.ZIndex = 23
     BrandTitle.Parent = BrandContainer
+
+    -- Mini Collapse Button on the header of the sidebar itself
+    local SidebarHeaderCloseBtn = Instance.new("ImageButton")
+    SidebarHeaderCloseBtn.Name = "SidebarHeaderCloseBtn"
+    SidebarHeaderCloseBtn.Size = UDim2.new(0, 24, 0, 24)
+    SidebarHeaderCloseBtn.Position = UDim2.new(1, -32, 0.5, -12)
+    SidebarHeaderCloseBtn.BackgroundColor3 = Colors.ControlBtn
+    SidebarHeaderCloseBtn.AutoButtonColor = false
+    SidebarHeaderCloseBtn.ZIndex = 24
+    SidebarHeaderCloseBtn.Parent = BrandContainer
+    Instance.new("UICorner", SidebarHeaderCloseBtn).CornerRadius = UDim.new(0, 6)
+    local headerCloseStroke = AddStroke(SidebarHeaderCloseBtn, Colors.Border, 1)
+
+    local headerCloseIcon = Instance.new("ImageLabel")
+    headerCloseIcon.Size = UDim2.new(0, 12, 0, 12)
+    headerCloseIcon.Position = UDim2.new(0.5, -6, 0.5, -6)
+    headerCloseIcon.Image = Icons.ChevronDown
+    headerCloseIcon.Rotation = 90 -- Points left ❮
+    headerCloseIcon.ImageColor3 = Colors.SubText
+    headerCloseIcon.BackgroundTransparency = 1
+    headerCloseIcon.ZIndex = 25
+    headerCloseIcon.Parent = SidebarHeaderCloseBtn
+
+    SidebarHeaderCloseBtn.MouseEnter:Connect(function()
+        Tween(SidebarHeaderCloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = Colors.ButtonHover })
+        Tween(headerCloseIcon, TweenInfo.new(0.12), { ImageColor3 = Colors.White })
+        headerCloseStroke.Color = Colors.Accent
+    end)
+    SidebarHeaderCloseBtn.MouseLeave:Connect(function()
+        Tween(SidebarHeaderCloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = Colors.ControlBtn })
+        Tween(headerCloseIcon, TweenInfo.new(0.12), { ImageColor3 = Colors.SubText })
+        headerCloseStroke.Color = Colors.Border
+    end)
+    AttachTooltip(SidebarHeaderCloseBtn, "Collapse Sidebar (Hide Tabs)")
 
     -- Sidebar Tab Navigation Scroll
     local SidebarScroll = Instance.new("ScrollingFrame")
@@ -1248,11 +1275,75 @@ function RaxorHub:Window(GuiConfig)
     end)
     AttachTooltip(closeBtn, "Close RaxorHub")
 
+    -- [[ Sidebar Collapse / Expand Toggle Button (Responsive & Mobile Touch Ready) ]]
+    local isSidebarCollapsed = false
+    local isSidebarAnimating = false
+    local ToggleSidebar = nil
+
+    local toggleBtnW = (isMobile and 30) or 28
+    local toggleBtnH = (isMobile and 30) or 28
+
+    local SidebarToggleBtn = Instance.new("ImageButton")
+    SidebarToggleBtn.Name = "SidebarToggleBtn"
+    SidebarToggleBtn.Size = UDim2.new(0, toggleBtnW, 0, toggleBtnH)
+    SidebarToggleBtn.Position = UDim2.new(0, 10, 0.5, -toggleBtnH / 2)
+    SidebarToggleBtn.BackgroundColor3 = Colors.ControlBtn
+    SidebarToggleBtn.AutoButtonColor = false
+    SidebarToggleBtn.ZIndex = 36
+    SidebarToggleBtn.Parent = TopBar
+    Instance.new("UICorner", SidebarToggleBtn).CornerRadius = UDim.new(0, 6)
+    local toggleBtnStroke = AddStroke(SidebarToggleBtn, Colors.Border, 1)
+
+    -- Toggle Icon: Chevron that rotates smoothly to indicate collapse / expand
+    local ToggleIcon = Instance.new("ImageLabel")
+    ToggleIcon.Name = "ToggleIcon"
+    ToggleIcon.Size = UDim2.new(0, 14, 0, 14)
+    ToggleIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+    ToggleIcon.Image = Icons.ChevronDown
+    ToggleIcon.Rotation = 90 -- Points left ❮ when sidebar is open (meaning: click to collapse)
+    ToggleIcon.ImageColor3 = Colors.SubText
+    ToggleIcon.BackgroundTransparency = 1
+    ToggleIcon.ZIndex = 37
+    ToggleIcon.Parent = SidebarToggleBtn
+
+    -- Subtle accent indicator pill inside the button (stylish Blade aesthetic)
+    local TogglePill = Instance.new("Frame")
+    TogglePill.Name = "TogglePill"
+    TogglePill.Size = UDim2.new(0, 2, 0, 14)
+    TogglePill.Position = UDim2.new(0, 4, 0.5, -7)
+    TogglePill.BackgroundColor3 = Colors.Accent
+    TogglePill.BorderSizePixel = 0
+    TogglePill.ZIndex = 37
+    TogglePill.Parent = SidebarToggleBtn
+    Instance.new("UICorner", TogglePill).CornerRadius = UDim.new(1, 0)
+
+    -- Hover effect
+    SidebarToggleBtn.MouseEnter:Connect(function()
+        if not isSidebarAnimating then
+            Tween(SidebarToggleBtn, TweenInfo.new(0.15), { BackgroundColor3 = Colors.ButtonHover })
+            Tween(ToggleIcon, TweenInfo.new(0.15), { ImageColor3 = Colors.White })
+            toggleBtnStroke.Color = Colors.Accent
+        end
+    end)
+    SidebarToggleBtn.MouseLeave:Connect(function()
+        if not isSidebarAnimating then
+            local baseBg = isSidebarCollapsed and Colors.ButtonHover or Colors.ControlBtn
+            local baseStroke = isSidebarCollapsed and Colors.Accent or Colors.Border
+            local baseIconCol = isSidebarCollapsed and Colors.Accent or Colors.SubText
+            Tween(SidebarToggleBtn, TweenInfo.new(0.15), { BackgroundColor3 = baseBg })
+            Tween(ToggleIcon, TweenInfo.new(0.15), { ImageColor3 = baseIconCol })
+            toggleBtnStroke.Color = baseStroke
+        end
+    end)
+
+    AttachTooltip(SidebarToggleBtn, "Collapse Sidebar (Hide Tabs)")
+
     -- Search Element Box (Left-aligned, flexible width, NEVER overlaps with controls!)
+    local searchOffsetLeft = 10 + toggleBtnW + 8 -- 46px on PC, 48px on Mobile
     local SearchContainer = Instance.new("Frame")
     SearchContainer.Name = "SearchContainer"
-    SearchContainer.Size = UDim2.new(1, -165, 0, 30)
-    SearchContainer.Position = UDim2.new(0, 14, 0.5, -15)
+    SearchContainer.Size = UDim2.new(1, -searchOffsetLeft - 150, 0, 30)
+    SearchContainer.Position = UDim2.new(0, searchOffsetLeft, 0.5, -15)
     SearchContainer.BackgroundColor3 = Colors.InputBg
     SearchContainer.ZIndex = 32
     SearchContainer.Parent = TopBar
@@ -1261,8 +1352,8 @@ function RaxorHub:Window(GuiConfig)
 
     -- Clamp max search width to 240px
     local searchConstraint = Instance.new("UISizeConstraint")
-    searchConstraint.MaxSize = Vector2.new(240, 30)
-    searchConstraint.MinSize = Vector2.new(100, 30)
+    searchConstraint.MaxSize = Vector2.new(220, 30)
+    searchConstraint.MinSize = Vector2.new(70, 30)
     searchConstraint.Parent = SearchContainer
 
     local SearchIcon = Instance.new("ImageLabel")
@@ -1302,6 +1393,114 @@ function RaxorHub:Window(GuiConfig)
     ContentContainer.ClipsDescendants = true
     ContentContainer.ZIndex = 25
     ContentContainer.Parent = MainFrame
+
+    -- [[ Smooth Sidebar Toggle Controller (Desktop & Mobile Touch Optimized) ]]
+    ToggleSidebar = function(forceState)
+        if isSidebarAnimating then return end
+        if forceState ~= nil and forceState == isSidebarCollapsed then return end
+
+        isSidebarAnimating = true
+        CloseAllDropdowns()
+
+        local targetState = (forceState ~= nil) and forceState or (not isSidebarCollapsed)
+        isSidebarCollapsed = targetState
+
+        local animDuration = 0.28
+        local animEasing = Enum.EasingStyle.Quart
+
+        if isSidebarCollapsed then
+            -- [[ COLLAPSE SIDEBAR: Expand content to full window width ]]
+            Sidebar.ClipsDescendants = true
+
+            -- Button bounce animation & icon rotation
+            Tween(SidebarToggleBtn, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, toggleBtnW - 3, 0, toggleBtnH - 3)
+            }).Completed:Connect(function()
+                Tween(SidebarToggleBtn, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, toggleBtnW, 0, toggleBtnH)
+                })
+            end)
+
+            Tween(ToggleIcon, TweenInfo.new(animDuration, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Rotation = -90, -- Points right ❯ to expand
+                ImageColor3 = Colors.Accent
+            })
+            Tween(TogglePill, TweenInfo.new(animDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 0.8
+            })
+            toggleBtnStroke.Color = Colors.Accent
+            AttachTooltip(SidebarToggleBtn, "Expand Sidebar (Show Tabs)")
+
+            local tSidebar = Tween(Sidebar, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 1, 0)
+            })
+            local tTopBar = Tween(TopBar, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 0),
+                Size = UDim2.new(1, 0, 0, 48)
+            })
+            local tContent = Tween(ContentContainer, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 48),
+                Size = UDim2.new(1, 0, 1, -48)
+            })
+
+            tSidebar.Completed:Connect(function()
+                if isSidebarCollapsed then
+                    Sidebar.Visible = false
+                end
+                isSidebarAnimating = false
+            end)
+        else
+            -- [[ EXPAND SIDEBAR: Restore normal sidebar & layout ]]
+            Sidebar.Visible = true
+            Sidebar.ClipsDescendants = true
+
+            -- Button bounce animation & icon rotation
+            Tween(SidebarToggleBtn, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, toggleBtnW - 3, 0, toggleBtnH - 3)
+            }).Completed:Connect(function()
+                Tween(SidebarToggleBtn, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, toggleBtnW, 0, toggleBtnH)
+                })
+            end)
+
+            Tween(ToggleIcon, TweenInfo.new(animDuration, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Rotation = 90, -- Points left ❮ to collapse
+                ImageColor3 = Colors.SubText
+            })
+            Tween(TogglePill, TweenInfo.new(animDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 0
+            })
+            toggleBtnStroke.Color = Colors.Border
+            AttachTooltip(SidebarToggleBtn, "Collapse Sidebar (Hide Tabs)")
+
+            local tSidebar = Tween(Sidebar, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, SidebarWidth, 1, 0)
+            })
+            local tTopBar = Tween(TopBar, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, SidebarWidth, 0, 0),
+                Size = UDim2.new(1, -SidebarWidth, 0, 48)
+            })
+            local tContent = Tween(ContentContainer, TweenInfo.new(animDuration, animEasing, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, SidebarWidth, 0, 48),
+                Size = UDim2.new(1, -SidebarWidth, 1, -48)
+            })
+
+            tSidebar.Completed:Connect(function()
+                isSidebarAnimating = false
+            end)
+        end
+    end
+
+    -- Wire click & touch events for both buttons
+    SidebarToggleBtn.Activated:Connect(function()
+        ToggleSidebar()
+    end)
+    SidebarHeaderCloseBtn.Activated:Connect(function()
+        ToggleSidebar(true)
+    end)
+
+    window.ToggleSidebar = ToggleSidebar
+    RaxorHub.ToggleSidebar = ToggleSidebar
 
     -- [[ Presets Modal Popup (Complete Configuration Hub - Mobile & PC Optimized) ]]
     PresetsModal = Instance.new("Frame")
@@ -1899,6 +2098,15 @@ function RaxorHub:Window(GuiConfig)
             end
             UpdateTabVisuals()
             Page.Visible = true
+
+            -- Mobile Auto-Collapse: On compact mobile screens, auto-collapse sidebar so tab contents have maximum space!
+            if isMobile and not isSidebarCollapsed and viewport.X < 720 and ToggleSidebar then
+                task.delay(0.08, function()
+                    if not isSidebarCollapsed then
+                        ToggleSidebar(true)
+                    end
+                end)
+            end
         end)
 
         if window.CountTab == 0 then
