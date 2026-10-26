@@ -13,12 +13,27 @@ local UI_VERSION = "v2.1.6"
 
 -- Executor & CoreGui protection
 local CoreGuiSuccess, CoreGui = pcall(function() return game:GetService("CoreGui") end)
-local OldUI = (CoreGuiSuccess and CoreGui and CoreGui:FindFirstChild(UI_NAME)) or PlayerGui:FindFirstChild(UI_NAME)
 
-if OldUI then
-    warn("[RaxorHub] Cleaning up existing instance...")
-    OldUI:Destroy()
+local function DestroyAllOldUIs()
+    local containers = {}
+    if gethui then
+        local ok, hui = pcall(gethui)
+        if ok and hui then table.insert(containers, hui) end
+    end
+    if CoreGuiSuccess and CoreGui then table.insert(containers, CoreGui) end
+    if PlayerGui then table.insert(containers, PlayerGui) end
+
+    for _, c in ipairs(containers) do
+        for _, n in ipairs({UI_NAME, "RaxorHub_UI", "RaxorHub"}) do
+            local old = c:FindFirstChild(n)
+            if old then
+                warn("[RaxorHub] Cleaning up existing instance: " .. n)
+                pcall(function() old:Destroy() end)
+            end
+        end
+    end
 end
+DestroyAllOldUIs()
 
 local ConfigFolder = "RaxorHub_Configs"
 if isfolder and makefolder and not isfolder(ConfigFolder) then
@@ -712,6 +727,7 @@ end
 -- [[ Main Window Constructor ]]
 function RaxorHub:Window(GuiConfig)
     GuiConfig = GuiConfig or {}
+    DestroyAllOldUIs()
     local window = {Tabs = {}, CountTab = 0, TabButtons = {}}
 
     local ScreenGui = Instance.new("ScreenGui")
