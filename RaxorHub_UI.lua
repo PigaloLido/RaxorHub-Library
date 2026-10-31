@@ -1067,47 +1067,13 @@ function RaxorHub:Window(GuiConfig)
     BrandTitle.TextSize = 16
     BrandTitle.TextColor3 = Colors.Text
     BrandTitle.Position = UDim2.new(0, 46, 0.5, -9)
-    BrandTitle.Size = UDim2.new(1, -80, 0, 18)
+    BrandTitle.Size = UDim2.new(1, -50, 0, 18)
     BrandTitle.TextTruncate = Enum.TextTruncate.AtEnd
     BrandTitle.TextXAlignment = Enum.TextXAlignment.Left
     BrandTitle.BackgroundTransparency = 1
     BrandTitle.Active = false
     BrandTitle.ZIndex = 23
     BrandTitle.Parent = BrandContainer
-
-    -- Mini Collapse Button on the header of the sidebar itself
-    local SidebarHeaderCloseBtn = Instance.new("ImageButton")
-    SidebarHeaderCloseBtn.Name = "SidebarHeaderCloseBtn"
-    SidebarHeaderCloseBtn.Size = UDim2.new(0, 24, 0, 24)
-    SidebarHeaderCloseBtn.Position = UDim2.new(1, -32, 0.5, -12)
-    SidebarHeaderCloseBtn.BackgroundColor3 = Colors.ControlBtn
-    SidebarHeaderCloseBtn.AutoButtonColor = false
-    SidebarHeaderCloseBtn.ZIndex = 45
-    SidebarHeaderCloseBtn.Parent = BrandContainer
-    Instance.new("UICorner", SidebarHeaderCloseBtn).CornerRadius = UDim.new(0, 6)
-    local headerCloseStroke = AddStroke(SidebarHeaderCloseBtn, Colors.Border, 1)
-
-    local headerCloseIcon = Instance.new("ImageLabel")
-    headerCloseIcon.Size = UDim2.new(0, 12, 0, 12)
-    headerCloseIcon.Position = UDim2.new(0.5, -6, 0.5, -6)
-    headerCloseIcon.Image = Icons.ChevronDown
-    headerCloseIcon.Rotation = 90 -- Points left ❮
-    headerCloseIcon.ImageColor3 = Colors.SubText
-    headerCloseIcon.BackgroundTransparency = 1
-    headerCloseIcon.ZIndex = 46
-    headerCloseIcon.Parent = SidebarHeaderCloseBtn
-
-    SidebarHeaderCloseBtn.MouseEnter:Connect(function()
-        Tween(SidebarHeaderCloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = Colors.ButtonHover })
-        Tween(headerCloseIcon, TweenInfo.new(0.12), { ImageColor3 = Colors.White })
-        headerCloseStroke.Color = Colors.Accent
-    end)
-    SidebarHeaderCloseBtn.MouseLeave:Connect(function()
-        Tween(SidebarHeaderCloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = Colors.ControlBtn })
-        Tween(headerCloseIcon, TweenInfo.new(0.12), { ImageColor3 = Colors.SubText })
-        headerCloseStroke.Color = Colors.Border
-    end)
-    AttachTooltip(SidebarHeaderCloseBtn, "Collapse Sidebar (Hide Tabs)")
 
     -- Sidebar Tab Navigation Scroll
     local SidebarScroll = Instance.new("ScrollingFrame")
@@ -1504,12 +1470,9 @@ function RaxorHub:Window(GuiConfig)
         end
     end
 
-    -- Wire click & touch events for both buttons
+    -- Wire click & touch events for sidebar toggle
     SidebarToggleBtn.Activated:Connect(function()
         ToggleSidebar()
-    end)
-    SidebarHeaderCloseBtn.Activated:Connect(function()
-        ToggleSidebar(true)
     end)
 
     window.ToggleSidebar = ToggleSidebar
