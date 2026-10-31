@@ -737,11 +737,18 @@ function RaxorHub:Window(GuiConfig)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     ScreenGui.DisplayOrder = 9999
 
-    if syn and syn.protect_gui then
+    if RunService:IsStudio() then
+        ScreenGui.Parent = PlayerGui
+    elseif syn and syn.protect_gui then
         syn.protect_gui(ScreenGui)
         ScreenGui.Parent = CoreGui
     elseif gethui then
-        ScreenGui.Parent = gethui()
+        local okHui, hui = pcall(gethui)
+        if okHui and hui then
+            ScreenGui.Parent = hui
+        else
+            ScreenGui.Parent = PlayerGui
+        end
     elseif CoreGuiSuccess and CoreGui then
         local ok = pcall(function() ScreenGui.Parent = CoreGui end)
         if not ok then ScreenGui.Parent = PlayerGui end
@@ -2133,6 +2140,11 @@ function RaxorHub:Window(GuiConfig)
             tab.CountSection = tab.CountSection + 1
             SectionFrame.LayoutOrder = tab.CountSection
             SectionFrame.Parent = Page
+
+            sectionItems.Frame = SectionFrame
+            function sectionItems:SetVisible(visible)
+                SectionFrame.Visible = visible
+            end
 
             local SectionLayout = Instance.new("UIListLayout")
             SectionLayout.Padding = UDim.new(0, 6)
@@ -3702,8 +3714,14 @@ function RaxorHub:Window(GuiConfig)
                 EmptyLabel.Parent = Scroll
 
                 local function UpdateCounter()
-                    CounterBadge.Text = "(" .. tostring(#entriesList) .. ")"
-                    EmptyLabel.Visible = (#entriesList == 0)
+                    pcall(function()
+                        if CounterBadge and CounterBadge.Parent then
+                            CounterBadge.Text = "(" .. tostring(#entriesList) .. ")"
+                        end
+                        if EmptyLabel and EmptyLabel.Parent then
+                            EmptyLabel.Visible = (#entriesList == 0)
+                        end
+                    end)
                 end
 
                 local RarityColors = {
@@ -3720,6 +3738,7 @@ function RaxorHub:Window(GuiConfig)
                 local logObj = {}
 
                 function logObj:AddEntry(data)
+                    pcall(function()
                     if type(data) ~= "table" then
                         data = { Name = tostring(data) }
                     end
@@ -3889,6 +3908,7 @@ function RaxorHub:Window(GuiConfig)
                         priceLbl.ZIndex = 32
                         priceLbl.Parent = item
                     end
+                    end)
                 end
 
                 function logObj:Clear()
