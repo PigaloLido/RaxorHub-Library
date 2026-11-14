@@ -25,7 +25,7 @@ local function DestroyAllOldUIs()
 
     for _, c in ipairs(containers) do
         for _, n in ipairs({UI_NAME, "RaxorHub_UI", "RaxorHub"}) do
-            local old = c:FindFirstChild(n)
+            local okOld, old = pcall(function() return c:FindFirstChild(n) end); old = okOld and old or nil
             if old then
                 warn("[RaxorHub] Cleaning up existing instance: " .. n)
                 pcall(function() old:Destroy() end)
@@ -44,7 +44,12 @@ end
 local MemoryFiles = {}
 local function SafeWriteFile(path, content)
     if writefile then
-        pcall(function() writefile(path, content) end)
+        pcall(function()
+            if makefolder and isfolder and not isfolder(ConfigFolder) then
+                makefolder(ConfigFolder)
+            end
+            writefile(path, content)
+        end)
     end
     MemoryFiles[path] = content
 end
@@ -443,10 +448,9 @@ function RaxorHub:GetConfigList()
     local files = SafeListFiles(ConfigFolder)
     local names = {}
     for _, file in ipairs(files) do
-        if file:sub(-5) == ".json" then
-            local cleanPath = file:gsub("\\", "/")
-            local nameWithExtension = cleanPath:gsub(ConfigFolder .. "/", "")
-            local finalName = nameWithExtension:gsub("%.json$", "")
+        local cleanPath = file:gsub("\\", "/")
+        local finalName = cleanPath:match("([^/]+)%.json$")
+        if finalName then
             table.insert(names, finalName)
         end
     end
@@ -1224,6 +1228,9 @@ function RaxorHub:Window(GuiConfig)
     local folderBtn = CreateTopIconBtn("FolderBtn", Icons.Folder, Colors.ControlBtn, Colors.ButtonHover, 1, function()
         if PresetsModal then
             PresetsModal.Visible = not PresetsModal.Visible
+            if PresetsModal.Visible and RaxorHub.RefreshPresetsList then
+                pcall(function() RaxorHub.RefreshPresetsList() end)
+            end
         end
     end)
     AttachTooltip(folderBtn, "Presets Configuration (Config Hub)")
@@ -1490,6 +1497,15 @@ function RaxorHub:Window(GuiConfig)
     PresetsModal.Parent = MainFrame
     Instance.new("UICorner", PresetsModal).CornerRadius = UDim.new(0, 10)
     AddStroke(PresetsModal, Colors.BorderFocus, 1.2)
+    RaxorHub.PresetsModal = PresetsModal
+    function RaxorHub:TogglePresets()
+        if PresetsModal then
+            PresetsModal.Visible = not PresetsModal.Visible
+            if PresetsModal.Visible and RaxorHub.RefreshPresetsList then
+                pcall(function() RaxorHub.RefreshPresetsList() end)
+            end
+        end
+    end
 
     local PresetsHeader = Instance.new("Frame")
     PresetsHeader.Size = UDim2.new(1, 0, 0, 42)
@@ -2290,6 +2306,7 @@ function RaxorHub:Window(GuiConfig)
 
             -- [[ Toggle Switch (Blade Modern Switch) ]]
             function sectionItems:AddToggleSwitch(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -2323,8 +2340,9 @@ function RaxorHub:Window(GuiConfig)
                 UpdateState(Config.ID, state)
 
                 local function VisualUpdate(val)
-                    local targetPos = val and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
-                    local targetColor = val and Colors.SwitchOn or Colors.SwitchOff
+                    local boolVal = (val == true)
+                    local targetPos = boolVal and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+                    local targetColor = boolVal and Colors.SwitchOn or Colors.SwitchOff
                     Tween(Knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos})
                     Tween(SwitchBg, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = targetColor})
                 end
@@ -2336,8 +2354,8 @@ function RaxorHub:Window(GuiConfig)
                         Knob = Knob,
                         Callback = Config.Callback,
                         Update = function(val)
-                            state = val
-                            VisualUpdate(val)
+                            state = (val == true)
+                            VisualUpdate(state)
                         end
                     }
                 end
@@ -2351,10 +2369,10 @@ function RaxorHub:Window(GuiConfig)
 
                 local toggleFunc = {
                     Set = function(self, val)
-                        state = val
-                        VisualUpdate(val)
-                        UpdateState(Config.ID, val)
-                        if Config.Callback then Config.Callback(val) end
+                        state = (val == true)
+                        VisualUpdate(state)
+                        UpdateState(Config.ID, state)
+                        if Config.Callback then Config.Callback(state) end
                     end,
                     Get = function(self)
                         return state
@@ -2362,9 +2380,11 @@ function RaxorHub:Window(GuiConfig)
                 }
                 return toggleFunc
             end
+            sectionItems.AddToggle = sectionItems.AddToggleSwitch
 
             -- [[ Slider Control (Blade Dual/Single Modern Slider) ]]
             function sectionItems:AddSlider(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -2430,6 +2450,7 @@ function RaxorHub:Window(GuiConfig)
                 UpdateState(Config.ID, Config.Default or Config.Min)
 
                 local function VisualUpdate(val)
+                    val = tonumber(val) or Config.Default or Config.Min
                     local relativeX = math.clamp((val - Config.Min) / (Config.Max - Config.Min), 0, 1)
                     SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
                     Handle.Position = UDim2.new(relativeX, 0, 0.5, 0)
@@ -2484,10 +2505,25 @@ function RaxorHub:Window(GuiConfig)
                         UpdateSlider(input)
                     end
                 end)
+
+                local sliderFunc = {
+                    Set = function(self, val)
+                        val = tonumber(val) or Config.Default or Config.Min
+                        val = math.clamp(val, Config.Min, Config.Max)
+                        VisualUpdate(val)
+                        UpdateState(Config.ID, val)
+                        if Config.Callback then Config.Callback(val) end
+                    end,
+                    Get = function(self)
+                        return RaxorHub.ConfigData[Config.ID] or Config.Default or Config.Min
+                    end
+                }
+                return sliderFunc
             end
 
             -- [[ Dropdown Control (Blade Single Select) ]]
             function sectionItems:AddDropdown(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -2715,6 +2751,7 @@ function RaxorHub:Window(GuiConfig)
 
             -- [[ Multi-Select Control (Blade Multi-Option Dropdown Image 3) ]]
             function sectionItems:AddMultiSelect(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -2984,9 +3021,11 @@ function RaxorHub:Window(GuiConfig)
 
                 return multiFunc
             end
+            sectionItems.AddMultiDropdown = sectionItems.AddMultiSelect
 
             -- [[ Color Picker Control (Blade Modern Full HSV Color Picker) ]]
             function sectionItems:AddColorPicker(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -3388,6 +3427,7 @@ function RaxorHub:Window(GuiConfig)
 
             -- [[ Input Box (Blade Text Field) ]]
             function sectionItems:AddInput(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
@@ -3893,6 +3933,7 @@ function RaxorHub:Window(GuiConfig)
 
             -- [[ Keybind Control (Blade Keybind Modal Image 6) ]]
             function sectionItems:AddKeybind(Config)
+                Config.ID = Config.ID or Config.Flag or (Config.Title and Config.Title ~= "" and Config.Title:gsub("%s+", "_"))
                 local Row = Instance.new("Frame")
                 Row.Size = SizeItem.BoxItem
                 Row.BackgroundColor3 = Colors.CardBg
