@@ -207,6 +207,7 @@ RaxorHub.Language = CurrentLanguage
 local TranslationDict = {
   ["Dashboard"] = { TH = "แผงควบคุม", EN = "Dashboard" },
   ["Settings"] = { TH = "ตั้งค่า", EN = "Settings" },
+  ["Combat"] = { TH = "ระบบต่อสู้", EN = "Combat" },
 
   ["SYSTEM INFO"] = { TH = "ข้อมูลระบบ (SYSTEM INFO)", EN = "SYSTEM INFO" },
   ["SERVER MANAGEMENT"] = { TH = "จัดการเซิร์ฟเวอร์", EN = "SERVER MANAGEMENT" },
@@ -1146,6 +1147,10 @@ function RaxorHub:Window(GuiConfig)
   table.clear(I18nRegistry)
   local startLang = GuiConfig.Language or GuiConfig.DefaultLanguage or "EN"
   RaxorHub:SetLanguage(startLang)
+  if type(GuiConfig.Title) == "table" then
+    GuiConfig.Title = GuiConfig.Title[startLang] or GuiConfig.Title["EN"] or GuiConfig.Title["TH"] or "RAXOR"
+  end
+  GuiConfig.Title = tostring(GuiConfig.Title or "RAXOR")
   local window = {Tabs = {}, CountTab = 0, TabButtons = {}}
   local ToggleUI = nil
 
@@ -1483,7 +1488,7 @@ function RaxorHub:Window(GuiConfig)
 
   local MiniTitle = InstNew("TextLabel")
   MiniTitle.Name = "MiniTitle"
-  MiniTitle.Text = string.upper(GuiConfig.Title or "RAXOR")
+  MiniTitle.Text = string.upper(type(GuiConfig.Title) == "string" and GuiConfig.Title or "RAXOR")
   MiniTitle.Font = Fonts.Title
   MiniTitle.TextSize = 11
   MiniTitle.TextColor3 = Colors.White
@@ -2145,7 +2150,7 @@ function RaxorHub:Window(GuiConfig)
   BrandLogo.Parent = BrandContainer
 
   local BrandTitle = InstNew("TextLabel")
-  BrandTitle.Text = string.upper(GuiConfig.Title or "RAXOR")
+  BrandTitle.Text = string.upper(type(GuiConfig.Title) == "string" and GuiConfig.Title or "RAXOR")
   BrandTitle.Font = Fonts.Brand
   BrandTitle.TextSize = 15
   BrandTitle.TextColor3 = Colors.Text
@@ -2649,7 +2654,7 @@ function RaxorHub:Window(GuiConfig)
   MobileLogo.Parent = TopBar
 
   local MobileTitle = InstNew("TextLabel")
-  MobileTitle.Text = string.upper(GuiConfig.Title or "RAXOR")
+  MobileTitle.Text = string.upper(type(GuiConfig.Title) == "string" and GuiConfig.Title or "RAXOR")
   MobileTitle.Font = Fonts.Brand
   MobileTitle.TextSize = 14
   MobileTitle.TextColor3 = Colors.Text
@@ -2861,10 +2866,12 @@ function RaxorHub:Window(GuiConfig)
   function window:AddTab(TabConfig)
   local tab = {CountSection = 0}
   local tabIconAsset = ResolveIcon(TabConfig.Icon)
+  local tabNameRaw = TabConfig.Name or TabConfig.Title or "Tab"
+  local tabNameStr = type(tabNameRaw) == "table" and (tabNameRaw.EN or tabNameRaw.TH or "Tab") or tostring(tabNameRaw)
 
   local Page = InstNew("ScrollingFrame")
   tab.Page = Page
-  Page.Name = TabConfig.Name .. "_Page"
+  Page.Name = tabNameStr .. "_Page"
   Page.Active = true
   Page.Size = U2(1, 0, 1, 0)
   Page.BackgroundTransparency = 1
@@ -2932,7 +2939,7 @@ function RaxorHub:Window(GuiConfig)
 
   local TabLabel = InstNew("TextLabel")
   TabLabel.Name = "Label"
-  TabLabel.Text = ResolveText(TabConfig.Name, CurrentLanguage)
+  TabLabel.Text = ResolveText(tabNameRaw, CurrentLanguage)
   TabLabel.Size = U2(1, -44, 1, 0)
   TabLabel.Position = U2(0, 38, 0, 0)
   TabLabel.Font = Fonts.Medium
@@ -2942,7 +2949,7 @@ function RaxorHub:Window(GuiConfig)
   TabLabel.BackgroundTransparency = 1
   TabLabel.ZIndex = 24
   TabLabel.Parent = TabContent
-  RegisterI18n(TabLabel, "Text", TabConfig.Name)
+  RegisterI18n(TabLabel, "Text", tabNameRaw)
 
   local PageLayout = InstNew("UIListLayout")
   PageLayout.Padding = UDim.new(0, 10)
@@ -2974,9 +2981,9 @@ function RaxorHub:Window(GuiConfig)
   TabLabel.TextSize = isThaiActive and 15 or 13
   TabIcon.ImageColor3 = Colors.Accent
   RaxorHub.ActivePage = Page
-  RaxorHub.ActiveTabName = TabConfig.Name
+  RaxorHub.ActiveTabName = tabNameStr
   if TopBreadcrumb then
-    local resolved = ResolveText(TabConfig.Name, CurrentLanguage)
+    local resolved = ResolveText(tabNameRaw, CurrentLanguage)
     TopBreadcrumb.Text = "| " .. resolved
     TopBreadcrumb.TextSize = (CurrentLanguage == "TH" or IsThaiText(resolved)) and 17 or 15
     TopBreadcrumb.Font = Fonts.Title
@@ -2998,7 +3005,7 @@ function RaxorHub:Window(GuiConfig)
 
   else
   local TabBtn = InstNew("TextButton")
-  TabBtn.Name = ResolveText(TabConfig.Name, "EN") .. "_TabBtn"
+  TabBtn.Name = tabNameStr .. "_TabBtn"
   TabBtn.Size = U2(0, 0, 0, 28)
   TabBtn.LayoutOrder = TabConfig.LayoutOrder or window.CountTab
   TabBtn.AutomaticSize = Enum.AutomaticSize.X
@@ -3032,7 +3039,7 @@ function RaxorHub:Window(GuiConfig)
 
   local TabLabel = InstNew("TextLabel")
   TabLabel.Name = "Label"
-  TabLabel.Text = ResolveText(TabConfig.Name, CurrentLanguage)
+  TabLabel.Text = ResolveText(tabNameRaw, CurrentLanguage)
   TabLabel.AutomaticSize = Enum.AutomaticSize.X
   TabLabel.Size = U2(0, 0, 1, 0)
   TabLabel.Font = Fonts.Medium
@@ -3041,7 +3048,7 @@ function RaxorHub:Window(GuiConfig)
   TabLabel.BackgroundTransparency = 1
   TabLabel.ZIndex = 34
   TabLabel.Parent = TabBtn
-  RegisterI18n(TabLabel, "Text", TabConfig.Name)
+  RegisterI18n(TabLabel, "Text", tabNameRaw)
 
   local PageLayout = InstNew("UIListLayout")
   PageLayout.Padding = UDim.new(0, 8)
