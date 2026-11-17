@@ -1,3 +1,4 @@
+--!nocheck
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -47,18 +48,35 @@ local function DestroyAllOldUIs()
   end
 end
 
-local ConfigFolder = "RaxorHub_Configs"
-if isfolder and makefolder and not isfolder(ConfigFolder) then
-  pcall(function() makefolder(ConfigFolder) end)
+local RaxorHub
+local BaseCfgDir = "RaxorHub_Configs"
+local ConfigFolder, AutoloadFile
+local function EnsureCfgDir()
+  if isfolder and makefolder then
+  pcall(function()
+  if not isfolder(BaseCfgDir) then makefolder(BaseCfgDir) end
+  if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
+  end)
+  end
 end
+local function SetCfgScope(scope)
+  local s = scope and tostring(scope):gsub("[^%w_%-]", "") or ""
+  if s == "" then
+  local gid = (game.GameId and game.GameId ~= 0) and game.GameId or game.PlaceId
+  s = tostring((gid and gid ~= 0) and gid or "Studio")
+  end
+  ConfigFolder = BaseCfgDir .. "/" .. s
+  AutoloadFile = ConfigFolder .. "/autoload.txt"
+  if RaxorHub then RaxorHub.ConfigFolder = ConfigFolder end
+  EnsureCfgDir()
+end
+SetCfgScope()
 
 local MemoryFiles = {}
 local function SafeWriteFile(path, content)
   if writefile then
   pcall(function()
-  if makefolder and isfolder and not isfolder(ConfigFolder) then
-  makefolder(ConfigFolder)
-  end
+  EnsureCfgDir()
   writefile(path, content)
   end)
   end
@@ -109,7 +127,7 @@ local function SafeListFiles(folder)
   end)
   end
   for path, _ in pairs(MemoryFiles) do
-  if path:sub(1, #folder) == folder then
+  if path:sub(1, #folder + 1) == folder .. "/" then
   local already = false
   for _, existing in ipairs(list) do
   if existing:gsub("\\", "/") == path:gsub("\\", "/") then
@@ -125,7 +143,7 @@ local function SafeListFiles(folder)
   return list
 end
 
-local RaxorHub = {
+RaxorHub = {
   Elements = {},
   ConfigData = {},
   Objects = {},
@@ -1006,7 +1024,6 @@ function RaxorHub:ResetAllSettings()
   end
 end
 
-local AutoloadFile = ConfigFolder .. "/autoload.txt"
 function RaxorHub:SetAutoload(name)
   if not name or name == "" or name == "---" then return end
   local cleanName = name:gsub("%.json$", "")
@@ -1143,6 +1160,7 @@ end
 
 function RaxorHub:Window(GuiConfig)
   GuiConfig = GuiConfig or {}
+  SetCfgScope(GuiConfig.ConfigFolder or GuiConfig.GameKey)
   DestroyAllOldUIs()
   table.clear(I18nRegistry)
   local startLang = GuiConfig.Language or GuiConfig.DefaultLanguage or "EN"
