@@ -591,6 +591,18 @@ local function ResolveIcon(iconInput)
   return Icons.Logo
 end
 
+local function BindClick(btn, fn)
+  local last = 0
+  local function fire()
+    local now = tick()
+    if now - last < 0.15 then return end
+    last = now
+    fn()
+  end
+  btn.Activated:Connect(fire)
+  btn.MouseButton1Click:Connect(fire)
+end
+
 local function CloseAllDropdowns()
   if activeDropdownSync then
   pcall(function() activeDropdownSync:Disconnect() end)
@@ -1045,7 +1057,8 @@ function RaxorHub:GetAutoload()
   if SafeIsFile(AutoloadFile) then
   local content = SafeReadFile(AutoloadFile)
   if content and content ~= "" and content ~= "None" then
-  return content:gsub("%s+", "")
+  local trimmed = content:match("^%s*(.-)%s*$")
+  if trimmed ~= "" and trimmed ~= "None" then return trimmed end
   end
   end
   return nil
@@ -1784,11 +1797,9 @@ function RaxorHub:Window(GuiConfig)
   PresetsCloseBtn.Parent = PresetsHeader
   AddCorner(PresetsCloseBtn, 5)
 
-  local function ClosePresets()
+  BindClick(PresetsCloseBtn, function()
   PresetsModal.Visible = false
-  end
-  PresetsCloseBtn.Activated:Connect(ClosePresets)
-  PresetsCloseBtn.MouseButton1Click:Connect(ClosePresets)
+  end)
 
   local ConfigInputFrame = InstNew("Frame")
   ConfigInputFrame.Name = "ConfigInputFrame"
@@ -2004,11 +2015,10 @@ function RaxorHub:Window(GuiConfig)
   loadBtn.Parent = itemRow
   AddCorner(loadBtn, 5)
 
-  local function DoLoad()
+  BindClick(loadBtn, function()
+  PlayClickSound()
   RaxorHub:LoadConfigData(cfgName)
-  end
-  loadBtn.Activated:Connect(DoLoad)
-  loadBtn.MouseButton1Click:Connect(DoLoad)
+  end)
   AttachTooltip(loadBtn, "Load This Preset")
 
   local overwriteBtn = InstNew("ImageButton")
@@ -2023,16 +2033,10 @@ function RaxorHub:Window(GuiConfig)
   AddCorner(overwriteBtn, 5)
   AddStroke(overwriteBtn, Colors.Border, 1)
 
-  local function DoOverwrite()
+  BindClick(overwriteBtn, function()
+  PlayClickSound()
   RaxorHub:SaveCurrentConfig(cfgName)
-  RaxorHub:Notify({
-    Title = "Preset Overwritten",
-    Content = "Overwrote preset '" .. cfgName .. "' successfully",
-    Duration = 2.5
-  })
-  end
-  overwriteBtn.Activated:Connect(DoOverwrite)
-  overwriteBtn.MouseButton1Click:Connect(DoOverwrite)
+  end)
   AttachTooltip(overwriteBtn, "Overwrite with Current Settings")
 
   local autoBtn = InstNew("ImageButton")
@@ -2047,16 +2051,15 @@ function RaxorHub:Window(GuiConfig)
   AddCorner(autoBtn, 5)
   AddStroke(autoBtn, isAuto and Colors.Accent or Colors.Border, 1)
 
-  local function DoAuto()
+  BindClick(autoBtn, function()
+  PlayClickSound()
   if RaxorHub:GetAutoload() == cfgName then
     RaxorHub:ResetAutoload()
   else
     RaxorHub:SetAutoload(cfgName)
   end
   RefreshPresetsList()
-  end
-  autoBtn.Activated:Connect(DoAuto)
-  autoBtn.MouseButton1Click:Connect(DoAuto)
+  end)
   AttachTooltip(autoBtn, isAuto and "Disable Autoload" or "Enable Autoload")
 
   local delBtn = InstNew("ImageButton")
@@ -2071,40 +2074,29 @@ function RaxorHub:Window(GuiConfig)
   AddCorner(delBtn, 5)
   AddStroke(delBtn, Colors.Border, 1)
 
-  local function DoDelete()
+  BindClick(delBtn, function()
+  PlayClickSound()
   RaxorHub:DeleteConfig(cfgName)
   RefreshPresetsList()
-  RaxorHub:Notify({
-    Title = "Preset Deleted",
-    Content = "Deleted preset '" .. cfgName .. "' successfully",
-    Duration = 2.5
-  })
-  end
-  delBtn.Activated:Connect(DoDelete)
-  delBtn.MouseButton1Click:Connect(DoDelete)
+  end)
   AttachTooltip(delBtn, "Delete This Preset Permanently")
   end
   end
   RaxorHub.RefreshPresetsList = RefreshPresetsList
 
-  local function DoResetAutoload()
+  BindClick(FooterResetBtn, function()
+  PlayClickSound()
   RaxorHub:ResetAutoload()
   RefreshPresetsList()
-  end
-  FooterResetBtn.Activated:Connect(DoResetAutoload)
-  FooterResetBtn.MouseButton1Click:Connect(DoResetAutoload)
+  end)
 
   local function DoSaveNew()
   local name = ConfigNameInput.Text
   if name and name ~= "" and name ~= "---" then
+  PlayClickSound()
   RaxorHub:SaveCurrentConfig(name)
   ConfigNameInput.Text = ""
   RefreshPresetsList()
-  RaxorHub:Notify({
-  Title = "Preset Saved",
-  Content = "Saved preset '" .. name .. "' successfully",
-  Duration = 2.5
-  })
   else
   RaxorHub:Notify({
   Title = "Error",
@@ -2113,8 +2105,7 @@ function RaxorHub:Window(GuiConfig)
   })
   end
   end
-  AddConfigBtn.Activated:Connect(DoSaveNew)
-  AddConfigBtn.MouseButton1Click:Connect(DoSaveNew)
+  BindClick(AddConfigBtn, DoSaveNew)
 
   ConfigNameInput.FocusLost:Connect(function(enterPressed)
   if enterPressed then
@@ -4592,8 +4583,7 @@ function RaxorHub:Window(GuiConfig)
       end)
     end
   end
-  ColorBox.Activated:Connect(ToggleColorPicker)
-  ColorBox.MouseButton1Click:Connect(ToggleColorPicker)
+  BindClick(ColorBox, ToggleColorPicker)
 
   if Config.ID and RaxorHub.Objects then
     RaxorHub.Objects[Config.ID] = {
